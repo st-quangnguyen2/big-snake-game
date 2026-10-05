@@ -176,6 +176,34 @@ html.i18n-pending #screen-menu .card { visibility: hidden; }
 .best-line { margin: 10px 0 0; text-align: center; color: var(--muted); }
 .paused-note { margin: 12px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--note); font-size: 15px; font-weight: 600; }
 .quit-round { width: 100%; margin-top: 8px; }
+.film-note { margin: 12px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--surface); color: var(--text-soft); font-size: 14px; font-weight: 600; }
+
+/* Film mode (?film): shortcut panel, and HUD hiding for clean takes (H). Hidden, not removed, so
+   catch icons still fly toward their slots. */
+.film-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: none;
+  width: 310px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(8, 18, 12, 0.85);
+  color: #e6f3e3;
+  font-size: 13px;
+  line-height: 1.35;
+  pointer-events: none;
+}
+body.hud-on .film-panel.open { display: block; }
+.film-panel h4 { display: flex; justify-content: space-between; align-items: center; margin: 0 0 8px; font-size: 15px; }
+.film-panel h4 small { color: #a9c9a6; font-size: 12px; font-weight: 600; }
+.film-panel .rows { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: center; }
+.film-panel kbd { min-width: 22px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.14); font: inherit; font-weight: 800; text-align: center; }
+.film-panel b { color: var(--yellow); }
+.film-panel p { margin: 8px 0 0; color: #a9c9a6; font-size: 12px; }
+body[data-hud='clean'] #hud > :not(#popups) { visibility: hidden; }
+body[data-hud='none'] #hud { visibility: hidden; }
 .best-line b { color: var(--accent-ink); font-size: 20px; }
 
 .menu-side h3:first-child { margin-top: 0; }

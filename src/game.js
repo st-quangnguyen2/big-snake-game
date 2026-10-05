@@ -97,6 +97,13 @@ export class Game {
     this.camView = 0;
     this.firstPerson = 0;
     this.headInBush = -1;
+    /**
+     * Film mode (recording promo footage): time scale, a cinematic camera
+     * ('orbit' | 'side' | 'flyover' | null for the game camera) and autopilot.
+     * While enabled, crashes cost nothing.
+     */
+    this.film = { enabled: false, timeScale: 1, camera: null, autopilot: false };
+    this.filmTime = 0;
     this.pushers = Array.from({ length: MAX_PUSHERS }, () => ({ x: 0, z: 0, r: 0 }));
     this._camTarget = new THREE.Vector3();
     this._look = new THREE.Vector3();
@@ -246,13 +253,36 @@ export class Game {
     return prey;
   }
 
+  /**
+   * Film mode: drops prey on the snake's path, `ahead` units in front and `side`
+   * units to its right. Extra prey is not replaced once eaten.
+   */
+  spawnAhead(kind, type, ahead, side = 0) {
+    const prey = new Prey(kind, type);
+    const { head, heading } = this.snake;
+    const fx = Math.sin(heading);
+    const fz = Math.cos(heading);
+    const limit = ARENA_HALF - 1.5;
+    const clamp = (v) => Math.max(-limit, Math.min(limit, v));
+    prey.position.set(clamp(head.x + fx * ahead - fz * side), 0, clamp(head.z + fz * ahead + fx * side));
+    prey.extra = true;
+    this.scene.add(prey.root);
+    this.prey.push(prey);
+    if (type === 'golden') {
+      this.goldenTimer = 22 + Math.random() * 16;
+      this.hooks.onGolden?.();
+    }
+    return prey;
+  }
+
   // ------------------------------------------------------------ loop
 
   frame(now) {
     // Clamp to [0, 50 ms]: never step backwards, and survive long stalls without tunnelling.
-    const dt = Math.max(0, Math.min(0.05, (now - this.last) / 1000));
+    const dt = Math.max(0, Math.min(0.05, (now - this.last) / 1000)) * this.film.timeScale;
     this.last = now;
-    const input = this.hooks.onFrame?.(now) ?? { turn: 0, boost: false };
+    let input = this.hooks.onFrame?.(now) ?? { turn: 0, boost: false };
+    if (this.film.autopilot) input = { ...input, ...this.autopilot(), boost: input.boost };
     const animating = this.mode !== 'paused';
     if (animating) this.clock += dt;
 
@@ -352,7 +382,7 @@ export class Game {
     }
     this.headInBush = bush;
 
-    if (scoring && this.snake.invulnerable <= 0) {
+    if (scoring && this.snake.invulnerable <= 0 && !this.film.enabled) {
       if (crash) this.hit(crash);
       else if (this.snake.hitsSelf()) this.hit('self');
     }
@@ -408,7 +438,7 @@ export class Game {
 
   eat(index, scoring) {
     const prey = this.removePrey(index);
-    if (prey.type !== 'golden') this.respawns.push({ kind: prey.kind, t: 0.6 + Math.random() * 1.6 });
+    if (prey.type !== 'golden' && !prey.extra) this.respawns.push({ kind: prey.kind, t: 0.6 + Math.random() * 1.6 });
     this.particles.burst(prey.position, prey.def.color, prey.kind === 'animal' ? 22 : 16, 4.5);
     // Catching an animal also throws golden sparkles.
     if (prey.kind === 'animal') this.particles.burst(prey.position, '#ffd84a', 16, 6, 0.09);
@@ -508,6 +538,10 @@ export class Game {
       this.snapCamera = true;
       return;
     }
+    if (this.film.camera) {
+      this.updateFilmCamera(dt);
+      return;
+    }
     // First person blends in when chosen; raising the chin still lifts to the overview.
     const lock = this.lockedCamera;
     const firstTarget = lock ? lock.first : this.view === 'first' ? 1 - look : 0;
@@ -556,6 +590,54 @@ export class Game {
       camera.position.y += (Math.random() - 0.5) * k;
     }
     camera.lookAt(this._look);
+  }
+
+  /** Switches the film camera move (null = game camera); the new move starts from the current view. */
+  setFilmCamera(mode) {
+    this.film.camera = mode;
+    this._filmLook = this.camera.position.clone().add(this.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(10));
+  }
+
+  /** Film-mode camera moves: orbit the snake, a low tracking shot beside it, or a wide arena flyover. */
+  updateFilmCamera(dt) {
+    const camera = this.camera;
+    const head = this.snake.head;
+    const ground = groundHeight(head.x, head.z);
+    if (this.mode !== 'paused') {
+      this.camHeading += wrapAngle(this.snake.heading - this.camHeading) * (1 - Math.exp(-dt * 3.2));
+      this.filmTime += dt;
+    }
+    const fx = Math.sin(this.camHeading);
+    const fz = Math.cos(this.camHeading);
+    const target = this._camTarget;
+    let fov = 50;
+    if (this.film.camera === 'orbit') {
+      const a = this.filmTime * 0.35;
+      const r = 7.5 + Math.min(4, (this.snake.length - START_LENGTH) * 0.04);
+      target.set(head.x + Math.sin(a) * r, 0, head.z + Math.cos(a) * r);
+      target.y = Math.max(ground, groundHeight(target.x, target.z)) + 3.4;
+      this._p.set(head.x, ground + 0.6, head.z);
+    } else if (this.film.camera === 'side') {
+      // Just above the grass on the snake's right, slightly ahead of the head.
+      target.set(head.x - fz * 3.6 + fx * 1.6, 0, head.z + fx * 3.6 + fz * 1.6);
+      target.y = groundHeight(target.x, target.z) + 1.1;
+      this._p.set(head.x + fx * 1.2, ground + 0.5, head.z + fz * 1.2);
+    } else {
+      const a = this.filmTime * 0.05;
+      target.set(Math.sin(a) * 38, 15, Math.cos(a) * 38);
+      this._p.set(0, 1, 0);
+      fov = 55;
+    }
+    const k = this.snapCamera ? 1 : 1 - Math.exp(-dt * 4);
+    this.snapCamera = false;
+    camera.position.lerp(target, k);
+    this._filmLook ??= this._p.clone();
+    this._filmLook.lerp(this._p, k);
+    if (Math.abs(camera.fov - fov) > 0.01) {
+      camera.fov += (fov - camera.fov) * k;
+      camera.updateProjectionMatrix();
+    }
+    camera.lookAt(this._filmLook);
   }
 
   /** Projects a world position to CSS pixels. */

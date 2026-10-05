@@ -76,6 +76,17 @@ export function bestScore(duration) {
   return topRecords(duration, 1)[0]?.score ?? 0;
 }
 
+/** Where a finished game would rank, without saving it (film mode). Same shape as addRecord's result. */
+export function rankRecord(record) {
+  const ahead = topRecords(record.duration, KEEP_PER_DURATION).filter((r) => r.score >= record.score).length;
+  const previousBest = bestScore(record.duration);
+  return {
+    rank: ahead < KEEP_PER_DURATION ? ahead + 1 : 0,
+    isBest: record.score > 0 && record.score > previousBest,
+    previousBest,
+  };
+}
+
 /** Saves a finished game; keeps the top KEEP_PER_DURATION per duration. */
 export function addRecord(record) {
   const previousBest = bestScore(record.duration);

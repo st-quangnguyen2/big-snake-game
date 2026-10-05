@@ -4,7 +4,7 @@ import { HeadTracker } from './headTracker.js';
 import { Keyboard, headSteer } from './input.js';
 import { GameAudio } from './audio.js';
 import {
-  DURATIONS, DEFAULT_GRASS_SETTINGS, loadSettings, saveSettings, addRecord, topRecords, bestScore, clearRecords,
+  DURATIONS, DEFAULT_GRASS_SETTINGS, loadSettings, saveSettings, addRecord, rankRecord, topRecords, bestScore, clearRecords,
 } from './storage.js';
 import { SKINS, HEAD_STYLES } from './models/snakeModel.js';
 import { ANIMAL_TYPES } from './models/animals.js';
@@ -12,6 +12,7 @@ import { THEMES } from './themes.js';
 import { SnakePreview } from './preview.js';
 import { GRASS_BLADES } from './models/environment.js';
 import { t, tr, getLang, setLang, applyI18n } from './i18n.js';
+import { FILM, FilmMode } from './film.js';
 
 const $ = (id) => document.getElementById(id);
 const ui = {
@@ -91,6 +92,7 @@ game.lockedCamera = lockedCamera();
 game.snake.setAppearance(settings.skin, settings.head);
 const preview = new SnakePreview($('snake-preview'));
 preview.setAppearance(settings.skin, settings.head);
+const film = FILM ? new FilmMode({ game, settings, updateSetting, isDark }) : null;
 
 // ---------------------------------------------------------------- helpers
 
@@ -138,6 +140,7 @@ function scheduleWorldUpdate() {
 function setHud(visible) {
   hudVisible = visible;
   ui.hud.classList.toggle('hidden', !visible);
+  document.body.classList.toggle('hud-on', visible);
   ui.camBox.classList.toggle('hidden', settings.control !== 'camera');
 }
 
@@ -389,7 +392,8 @@ function onEnd(result) {
   ui.warn.classList.add('hidden');
   const duration = Math.round(game.stats.duration / 60);
   const record = { ...result, duration, control: settings.control, date: Date.now() };
-  const { rank, isBest } = addRecord(record);
+  // Film-mode rounds are staged, so they are ranked but never saved.
+  const { rank, isBest } = film ? rankRecord(record) : addRecord(record);
   audio.music.stop(0.3);
   audio.gameOver(isBest);
   $('over-title').textContent = t('over.title');
@@ -662,6 +666,7 @@ function updateSetting(key, value) {
     scheduleWorldUpdate();
   }
   syncMenu();
+  film?.render();
 }
 
 function markActive(groupId, value) {
@@ -742,6 +747,7 @@ function applyLanguage() {
   syncMenu();
   renderRecords();
   for (const badge of ui.catchBar.querySelectorAll('[data-type]')) badge.title = slotName(badge.dataset.type);
+  film?.render();
 }
 
 $('lang-switch').addEventListener('click', (e) => {
@@ -936,6 +942,7 @@ document.addEventListener('visibilitychange', () => {
 renderOptions();
 applyI18n();
 setMenuFromPause(false);
+$('film-note').classList.toggle('hidden', !film);
 syncMenu();
 renderRecords();
 show('menu');
