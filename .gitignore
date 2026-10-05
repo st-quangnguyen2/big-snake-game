@@ -3,3 +3,4 @@ dist/
 public/mediapipe/
 .DS_Store
 .claude/
+promo/*.mp4
