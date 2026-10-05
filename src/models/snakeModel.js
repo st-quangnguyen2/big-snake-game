@@ -7,27 +7,27 @@ const PATTERNS = { bands: 0, diamonds: 1, spots: 2, tiger: 3, rainbow: 4 };
 
 /** Snake colour schemes. `pattern` selects the body pattern drawn by the skin shader. */
 export const SKINS = {
-  green: { name: 'Xanh lá', base: '#3fb54a', dark: '#2a8a37', stripe: '#f6d73b', belly: '#cdeb94', pattern: 'bands' },
-  ocean: { name: 'Xanh biển', base: '#2f8fe0', dark: '#1b5ea8', stripe: '#a5ecff', belly: '#d8f2ff', pattern: 'diamonds' },
-  fire: { name: 'Đỏ lửa', base: '#e53935', dark: '#9e1f1b', stripe: '#ffc107', belly: '#ffe3b8', pattern: 'tiger' },
-  grape: { name: 'Tím mộng mơ', base: '#8e44ad', dark: '#5b2a78', stripe: '#ffc4e1', belly: '#efdcf7', pattern: 'spots' },
-  candy: { name: 'Hồng kẹo', base: '#ff7eb6', dark: '#e2559a', stripe: '#ffffff', belly: '#ffe6f2', pattern: 'bands' },
-  tiger: { name: 'Cam hổ', base: '#ff9800', dark: '#3b2a1a', stripe: '#ffd180', belly: '#fff3e0', pattern: 'tiger' },
-  lemon: { name: 'Vàng chanh', base: '#c6d837', dark: '#7c8a12', stripe: '#ffffff', belly: '#f9fbe7', pattern: 'spots' },
-  galaxy: { name: 'Ngân hà', base: '#283593', dark: '#121858', stripe: '#ffe082', belly: '#9fa8da', pattern: 'spots' },
-  rainbow: { name: 'Cầu vồng', base: '#ff5252', dark: '#ffffff', stripe: '#ffffff', belly: '#fff8e1', pattern: 'rainbow' },
+  green: { name: { vi: 'Xanh lá', en: 'Green' }, base: '#3fb54a', dark: '#2a8a37', stripe: '#f6d73b', belly: '#cdeb94', pattern: 'bands' },
+  ocean: { name: { vi: 'Xanh biển', en: 'Ocean blue' }, base: '#2f8fe0', dark: '#1b5ea8', stripe: '#a5ecff', belly: '#d8f2ff', pattern: 'diamonds' },
+  fire: { name: { vi: 'Đỏ lửa', en: 'Fire red' }, base: '#e53935', dark: '#9e1f1b', stripe: '#ffc107', belly: '#ffe3b8', pattern: 'tiger' },
+  grape: { name: { vi: 'Tím mộng mơ', en: 'Dreamy purple' }, base: '#8e44ad', dark: '#5b2a78', stripe: '#ffc4e1', belly: '#efdcf7', pattern: 'spots' },
+  candy: { name: { vi: 'Hồng kẹo', en: 'Candy pink' }, base: '#ff7eb6', dark: '#e2559a', stripe: '#ffffff', belly: '#ffe6f2', pattern: 'bands' },
+  tiger: { name: { vi: 'Cam hổ', en: 'Tiger orange' }, base: '#ff9800', dark: '#3b2a1a', stripe: '#ffd180', belly: '#fff3e0', pattern: 'tiger' },
+  lemon: { name: { vi: 'Vàng chanh', en: 'Lemon yellow' }, base: '#c6d837', dark: '#7c8a12', stripe: '#ffffff', belly: '#f9fbe7', pattern: 'spots' },
+  galaxy: { name: { vi: 'Ngân hà', en: 'Galaxy' }, base: '#283593', dark: '#121858', stripe: '#ffe082', belly: '#9fa8da', pattern: 'spots' },
+  rainbow: { name: { vi: 'Cầu vồng', en: 'Rainbow' }, base: '#ff5252', dark: '#ffffff', stripe: '#ffffff', belly: '#fff8e1', pattern: 'rainbow' },
 };
 
 /** Head styles: eyes and a fun accessory. */
 export const HEAD_STYLES = {
-  classic: { name: 'Cổ điển', emoji: '🐍' },
-  cute: { name: 'Dễ thương', emoji: '🥰' },
-  cool: { name: 'Ngầu', emoji: '😎' },
-  king: { name: 'Nhà vua', emoji: '👑' },
-  party: { name: 'Tiệc tùng', emoji: '🥳' },
-  dragon: { name: 'Rồng', emoji: '🐉' },
-  bow: { name: 'Nơ xinh', emoji: '🎀' },
-  cat: { name: 'Mèo con', emoji: '🐱' },
+  classic: { name: { vi: 'Cổ điển', en: 'Classic' }, emoji: '🐍' },
+  cute: { name: { vi: 'Dễ thương', en: 'Cute' }, emoji: '🥰' },
+  cool: { name: { vi: 'Ngầu', en: 'Cool' }, emoji: '😎' },
+  king: { name: { vi: 'Nhà vua', en: 'King' }, emoji: '👑' },
+  party: { name: { vi: 'Tiệc tùng', en: 'Party' }, emoji: '🥳' },
+  dragon: { name: { vi: 'Rồng', en: 'Dragon' }, emoji: '🐉' },
+  bow: { name: { vi: 'Nơ xinh', en: 'Bow' }, emoji: '🎀' },
+  cat: { name: { vi: 'Mèo con', en: 'Kitty' }, emoji: '🐱' },
 };
 
 // ------------------------------------------------------------------ head

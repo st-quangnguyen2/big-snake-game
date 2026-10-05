@@ -310,23 +310,23 @@ export function buildRabbit() {
 
 export const ANIMAL_TYPES = {
   mouse: {
-    name: 'Chuột', emoji: '🐭', points: 40, growth: 2, radius: 0.42, color: '#a3a6b4', weight: 30,
+    name: { vi: 'Chuột', en: 'Mouse' }, emoji: '🐭', points: 40, growth: 2, radius: 0.42, color: '#a3a6b4', weight: 30,
     move: 'scurry', wanderSpeed: 1.4, fleeSpeed: 4.6, fleeRadius: 6,
-    desc: 'Chạy lon ton rất nhanh, đổi hướng liên tục.', build: buildMouse,
+    desc: { vi: 'Chạy lon ton rất nhanh, đổi hướng liên tục.', en: 'Scurries very fast and keeps changing direction.' }, build: buildMouse,
   },
   chick: {
-    name: 'Gà con', emoji: '🐥', points: 35, growth: 2, radius: 0.42, color: '#ffd93b', weight: 28,
+    name: { vi: 'Gà con', en: 'Chick' }, emoji: '🐥', points: 35, growth: 2, radius: 0.42, color: '#ffd93b', weight: 28,
     move: 'scurry', wanderSpeed: 1.0, fleeSpeed: 3.6, fleeRadius: 5,
-    desc: 'Chậm, vỗ cánh hoảng loạn khi bị đuổi.', build: buildChick,
+    desc: { vi: 'Chậm, vỗ cánh hoảng loạn khi bị đuổi.', en: 'Slow, flaps around in a panic when chased.' }, build: buildChick,
   },
   frog: {
-    name: 'Ếch', emoji: '🐸', points: 50, growth: 2, radius: 0.42, color: '#56b947', weight: 24,
+    name: { vi: 'Ếch', en: 'Frog' }, emoji: '🐸', points: 50, growth: 2, radius: 0.42, color: '#56b947', weight: 24,
     move: 'hop', hopTime: 0.42, hopHeight: 0.55, wanderSpeed: 1.2, fleeSpeed: 4.2, fleeRadius: 5.5,
-    desc: 'Nhảy từng cú, khó đoán hướng.', build: buildFrog,
+    desc: { vi: 'Nhảy từng cú, khó đoán hướng.', en: 'Moves in hops, hard to predict.' }, build: buildFrog,
   },
   rabbit: {
-    name: 'Thỏ', emoji: '🐰', points: 70, growth: 3, radius: 0.45, color: '#f5f0e9', weight: 18,
+    name: { vi: 'Thỏ', en: 'Rabbit' }, emoji: '🐰', points: 70, growth: 3, radius: 0.45, color: '#f5f0e9', weight: 18,
     move: 'hop', hopTime: 0.55, hopHeight: 0.7, wanderSpeed: 1.5, fleeSpeed: 4.9, fleeRadius: 7,
-    desc: 'Nhanh nhất và cảnh giác nhất — cần tăng tốc để bắt.', build: buildRabbit,
+    desc: { vi: 'Nhanh nhất và cảnh giác nhất — cần tăng tốc để bắt.', en: 'The fastest and most alert — boost to catch it.' }, build: buildRabbit,
   },
 };

@@ -47,13 +47,13 @@ const CANDY_LEAVES = {
 
 export const THEMES = {
   meadow: {
-    name: 'Đồng cỏ', emoji: '🌼',
+    name: { vi: 'Đồng cỏ', en: 'Meadow' }, emoji: '🌼',
     ground: ['#86cf5f', '#79c453'], outer: '#68ad4c',
     sky: ['#5fb2f0', '#bfe4fa', '#e9f6ff'], fog: '#cfe9f7', hemi: ['#d9efff', '#4f7a3c'],
     recolor: {},
   },
   autumn: {
-    name: 'Mùa thu', emoji: '🍁',
+    name: { vi: 'Mùa thu', en: 'Autumn' }, emoji: '🍁',
     ground: ['#d6b25c', '#c8a24f'], outer: '#b38a40',
     sky: ['#f2a65a', '#f7d6a2', '#fdf0dc'], fog: '#f3dcb5', hemi: ['#ffe2b8', '#7a5a2a'],
     recolor: {
@@ -63,7 +63,7 @@ export const THEMES = {
     },
   },
   winter: {
-    name: 'Mùa đông', emoji: '❄️',
+    name: { vi: 'Mùa đông', en: 'Winter' }, emoji: '❄️',
     ground: ['#f3f7fc', '#e3ecf6'], outer: '#e8eff7',
     sky: ['#8fb8de', '#d3e5f5', '#f4f9fd'], fog: '#e6eef6', hemi: ['#eef6ff', '#9fb2c8'],
     recolor: {
@@ -73,7 +73,7 @@ export const THEMES = {
     },
   },
   desert: {
-    name: 'Sa mạc', emoji: '🏜️',
+    name: { vi: 'Sa mạc', en: 'Desert' }, emoji: '🏜️',
     ground: ['#efd69a', '#e4c987'], outer: '#dcbd7a',
     sky: ['#4aa3e8', '#a9d6f5', '#fbeed2'], fog: '#f4e3bd', hemi: ['#fff1d6', '#9c7a3e'],
     recolor: {
@@ -83,7 +83,7 @@ export const THEMES = {
     },
   },
   candy: {
-    name: 'Xứ kẹo', emoji: '🍭',
+    name: { vi: 'Xứ kẹo', en: 'Candy land' }, emoji: '🍭',
     ground: ['#ffd1e8', '#d4f5ec'], outer: '#f6c6df',
     sky: ['#b39ddb', '#f3d1f4', '#fff0fa'], fog: '#f6defa', hemi: ['#fff0fb', '#c48ab8'],
     recolor: {

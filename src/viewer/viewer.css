@@ -134,6 +134,9 @@ html, body { margin: 0; height: 100%; background: #e9f6ff; }
   cursor: pointer;
 }
 .toolbar button:hover { background: #cfeec5; }
+.toolbar .lang-switch { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--accent-soft); }
+.toolbar .lang-switch button { padding: 3px 9px; border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 800; }
+.toolbar .lang-switch button.active { background: var(--accent); color: #fff; }
 .scene-opts { display: flex; align-items: center; gap: 10px; }
 .scene-opts.hidden { display: none; }
 .scene-opts select { padding: 4px 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit; font-size: 14px; }

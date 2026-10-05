@@ -7,8 +7,9 @@ high scores are saved locally.
 
 ![A round of Big Snake 3D](docs/images/gameplay.jpg)
 
-> The in-game interface is in Vietnamese. In this README, on-screen labels are given in English followed by the
-> original label, e.g. **Start** (`▶ Bắt đầu`), so you can find them in the screenshots.
+> The game speaks **Vietnamese and English** — switch with **VI / EN** in the top-right corner of the menu (or of the
+> model library). The choice is remembered; on a first visit the game follows the browser language.
+> The screenshots below show the English interface.
 
 ## Contents
 
@@ -34,6 +35,7 @@ high scores are saved locally.
 - 🎵 Synthesized background music and sound effects with separate volume controls.
 - 🏆 2/3/4/5‑minute rounds and a high-score table stored in the browser (localStorage).
 - 🧩 Every 3D model is built in code (no external model files), plus a **model library** page to inspect each one.
+- 🌐 Vietnamese / English interface, switchable at any time (even with a round paused).
 
 ---
 
@@ -99,6 +101,7 @@ src/world.js                Arena: hills, obstacles, mud, big trees, berry bushe
 src/headTracker.js          Webcam + MediaPipe Face Landmarker → filtered head angles
 src/input.js                Keyboard, and mapping head angles → steer / boost / look up
 src/storage.js              Settings and high scores (localStorage)
+src/i18n.js                 Vietnamese / English UI text, t() / tr() helpers and the language switch
 src/audio.js, src/music.js  Sound effects, volume buses, background music (a small step sequencer)
 src/themes.js               Arena theme palettes and night lighting
 src/preview.js              Live snake preview in the menu
@@ -167,21 +170,20 @@ After that, every push to `main` redeploys the site; you can also re-run it with
 
 ![Main menu](docs/images/menu.jpg)
 
-On the **Play** tab (`🎮 Chơi`), choose the **round length** (2 / 3 / 4 / 5 minutes) and the **control method**
-— Camera (`📷 Camera`) or Keyboard (`⌨️ Bàn phím`) — then press **Start** (`▶ Bắt đầu`) or Enter.
+On the **🎮 Play** tab, choose the **round length** (2 / 3 / 4 / 5 minutes) and the **control method**
+— 📷 Camera or ⌨️ Keyboard — then press **▶ Start** or Enter.
 On the right are the **high-score table** (filtered by round length) and a short summary of the rules.
-The other tabs are **Customize** (`🎨 Tuỳ biến`, see [section 5](#5-customization)) and **Settings** (`⚙️ Cài đặt`:
-camera view, sound, head-control options).
+The other tabs are **🎨 Customize** (see [section 5](#5-customization)) and **⚙️ Settings** (camera view,
+sound, head-control options). The **VI / EN** switch next to the title changes the language.
 
 ### 4.2. Camera calibration (head control)
 
 1. Allow camera access when the browser asks.
 2. Sit 50–80 cm from the screen with your face centred in the frame and well lit.
-3. Look straight at the screen, press **Calibrate** (`🎯 Hiệu chỉnh`) and hold still for about a second.
+3. Look straight at the screen, press **🎯 Calibrate** and hold still for about a second.
 4. Turn your head: the steering gauge should move **the same way** as your head. If it is reversed, press
-   **Invert** (`⇄ Đảo chiều`). Nodding lights up the **BOOST** chip (`⚡ TĂNG TỐC`); raising your chin lights up the
-   **LOOK** chip (`👀 NHÌN XA`).
-5. Press **Play** (`Vào game ▶`) — a 3‑2‑1 countdown starts the round.
+   **⇄ Invert**. Nodding lights up the **⚡ BOOST** chip; raising your chin lights up the **👀 LOOK** chip.
+5. Press **Play ▶** — a 3‑2‑1 countdown starts the round.
 
 ### 4.3. Controls
 
@@ -230,7 +232,7 @@ The snake always moves forward and can never reverse. The more it eats, the long
 
 - **Top left**: score, combo, length and the best score for the current round length.
 - **Top centre**: the countdown timer and the **catch counter** 🐭 🐥 🐸 🐰 🍎. When you catch an animal, a popup like
-  "🐰 +70 · Bắt được Thỏ!" (*Caught a rabbit!*) appears, the animal's icon flies into its slot, and the slot bounces
+  "🐰 +70 · Rabbit caught!" appears, the animal's icon flies into its slot, and the slot bounces
   with a "ting".
 - **Top right**: the minimap (rotates with the snake and shows trees, bushes, mud, rocks and prey), the 🔒 view-lock
   button and the ⏸ pause button.
@@ -253,17 +255,16 @@ unlock it.
 | --- | --- |
 | ![Pause screen](docs/images/pause.jpg) | ![Settings while paused](docs/images/settings.jpg) |
 
-The pause screen has quick volume sliders, **Recalibrate** (`🎯 Hiệu chỉnh lại`), **Settings** (`⚙️ Cài đặt`) and
-**Quit** (`Thoát`). Settings opens the full menu without losing the round; press **Continue** (`▶ Tiếp tục chơi`) to get
+The pause screen has quick volume sliders, **🎯 Recalibrate**, **⚙️ Settings** and **Quit**. Settings opens the
+full menu without losing the round (you can even switch the language there); press **▶ Continue** to get
 a 3‑2‑1 countdown and carry on exactly where you left off (a new round length only applies from the next round).
 
 ### 4.8. Game over and high scores
 
 ![Game over screen](docs/images/gameover.jpg)
 
-When time runs out you see your score, your rank for that round length (🏆 `KỶ LỤC MỚI!` — *new record!* — if you
-beat it), the final length, how many fruits, animals and golden apples you ate, and a breakdown per prey type.
-The top 20 scores are kept for each round length; **Clear records** (`Xoá kỷ lục`) in the menu resets them.
+When time runs out you see your score, your rank for that round length (🏆 **NEW RECORD!** if you beat it), the final length, how many fruits, animals and golden apples you ate, and a breakdown per prey type.
+The top 20 scores are kept for each round length; **Clear records** in the menu resets them.
 
 ---
 
@@ -271,7 +272,7 @@ The top 20 scores are kept for each round length; **Clear records** (`Xoá kỷ 
 
 ![Customize tab with the live preview](docs/images/customize.jpg)
 
-The **Customize** tab (`🎨 Tuỳ biến`) has a live 3D preview of your snake. Every choice is saved and can also be
+The **🎨 Customize** tab has a live 3D preview of your snake. Every choice is saved and can also be
 changed while the game is paused.
 
 ### Snake skins and head styles
@@ -280,8 +281,8 @@ changed while the game is paused.
 | --- | --- |
 | ![Snake skins](docs/images/viewer-skins.jpg) | ![Head styles](docs/images/viewer-heads.jpg) |
 
-- **Skins**: Green (bands), Ocean (diamonds), Fire and Tiger (stripes), Grape, Lemon and Galaxy (spots),
-  Candy (white bands), Rainbow.
+- **Skins**: Green (bands), Ocean blue (diamonds), Fire red and Tiger orange (stripes), Dreamy purple, Lemon yellow
+  and Galaxy (spots), Candy pink (white bands), Rainbow.
 - **Head styles**: Classic, Cute, Cool (sunglasses), King (crown), Party (party hat), Dragon (horns), Bow, Kitty.
 
 ### Arena themes
@@ -298,18 +299,18 @@ Together with **Meadow** (the image at the top) there are 5 themes. Each theme i
 
 ![Night mode](docs/images/night.jpg)
 
-**Light / Dark / System** (`☀️ Sáng / 🌙 Tối / 🖥️ Theo máy`): dark mode switches the UI to dark colours and turns the
+**☀️ Light / 🌙 Dark / 🖥️ System**: dark mode switches the UI to dark colours and turns the
 arena into night with a moon, stars and fireflies. It works with every theme.
 
 ### Grass and flowers
 
 | Slider | Range | Default |
 | --- | --- | --- |
-| 🌱 Blades per clump (`Số phiến`) | 16–32 | 28 |
-| 📏 Height (`Độ cao`) | 50–200% | 100% |
-| 🌾 Density (`Độ rậm`, number of clumps) | 20–250% (100% = 2,600 clumps) | 100% |
-| 🌿 Clump size (`Cụm cỏ`) | 50–200% | 100% |
-| 🎲 Variety (`Đa dạng`) | 0–100% — higher means grass grows in random patches of different sizes | 50% |
+| 🌱 Blades (per clump) | 16–32 | 28 |
+| 📏 Height | 50–200% | 100% |
+| 🌾 Density (number of clumps) | 20–250% (100% = 2,600 clumps) | 100% |
+| 🌿 Clump size | 50–200% | 100% |
+| 🎲 Variety | 0–100% — higher means grass grows in random patches of different sizes | 50% |
 
 There are 9 kinds of flowers (cosmos, daisy, tulip, sunflower, lavender, dandelion, bluebell, rose, buttercup). They
 grow in clumps at random heights and lean aside when the snake passes. On slower machines, lower the density and the
@@ -350,9 +351,9 @@ All sound is synthesized with the Web Audio API (`src/audio.js`, `src/music.js`)
 
 | Problem | Fix |
 | --- | --- |
-| "Camera unavailable" (`Chưa dùng được camera`) | Click the camera icon in the address bar to allow access, then **Retry** (`Thử lại`). The page must be served over `https://` or from `localhost`. |
+| "Camera unavailable" | Click the camera icon in the address bar to allow access, then **Retry**. The page must be served over `https://` or from `localhost`. |
 | The camera is in use by another app | Close that app (Zoom, Meet…) and retry. |
-| The snake turns the opposite way | Calibration screen → **Invert** (`⇄ Đảo chiều`), or Settings → head control → **Invert steering** (`Đảo chiều lái`). |
+| The snake turns the opposite way | Calibration screen → **⇄ Invert**, or Settings → Head control → **Invert steering**. |
 | Steering feels too weak / too twitchy | Recalibrate while sitting straight; adjust **Sensitivity** in Settings. |
 | The game keeps pausing itself | Your face is leaving the frame or the room is too dark — centre yourself and add light. |
 | Low frame rate | Lower grass **Density** and **Blades per clump**; prefer the Near view over Top. |

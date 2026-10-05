@@ -280,15 +280,15 @@ function buildButtercup() {
  * height = [min, max] random stem-stretch factors, palette = blossom colours.
  */
 export const FLOWER_TYPES = {
-  cosmos: { name: 'Hoa cánh bướm', weight: 3, stemH: 0.32, height: [0.6, 1.8], palette: ['#ff7eb6', '#ffffff', '#b388ff', '#ffb74d', '#ff5252'], build: buildCosmos },
-  daisy: { name: 'Hoa cúc', weight: 3, stemH: 0.3, height: [0.6, 1.7], palette: ['#ffffff', '#fff6d5', '#ffe0ef'], build: buildDaisy },
-  tulip: { name: 'Tulip', weight: 2, stemH: 0.36, height: [0.8, 1.9], palette: ['#e53935', '#ff9800', '#ffeb3b', '#ec407a', '#ab47bc'], build: buildTulip },
-  sunflower: { name: 'Hướng dương', weight: 1, stemH: 0.7, height: [0.9, 1.8], palette: ['#ffca28', '#ffb300', '#ffd54f'], build: buildSunflower },
-  lavender: { name: 'Oải hương', weight: 2, stemH: 0.3, height: [0.7, 1.9], palette: ['#9575cd', '#7e57c2', '#b39ddb'], build: buildLavender },
-  dandelion: { name: 'Bồ công anh', weight: 2, stemH: 0.3, height: [0.6, 1.6], palette: ['#ffffff', '#fffde7'], build: buildDandelion },
-  bluebell: { name: 'Hoa chuông', weight: 2, stemH: 0.22, height: [0.8, 1.8], palette: ['#5c6bc0', '#42a5f5', '#ce93d8'], build: buildBluebell },
-  rose: { name: 'Hoa hồng', weight: 1, stemH: 0.32, height: [0.8, 1.6], palette: ['#e91e63', '#f06292', '#ff8a80', '#ffffff'], build: buildRose },
-  buttercup: { name: 'Mao lương', weight: 3, stemH: 0.12, height: [0.6, 1.5], palette: ['#ffeb3b', '#fff176'], build: buildButtercup },
+  cosmos: { name: { vi: 'Hoa cánh bướm', en: 'Cosmos' }, weight: 3, stemH: 0.32, height: [0.6, 1.8], palette: ['#ff7eb6', '#ffffff', '#b388ff', '#ffb74d', '#ff5252'], build: buildCosmos },
+  daisy: { name: { vi: 'Hoa cúc', en: 'Daisy' }, weight: 3, stemH: 0.3, height: [0.6, 1.7], palette: ['#ffffff', '#fff6d5', '#ffe0ef'], build: buildDaisy },
+  tulip: { name: { vi: 'Tulip', en: 'Tulip' }, weight: 2, stemH: 0.36, height: [0.8, 1.9], palette: ['#e53935', '#ff9800', '#ffeb3b', '#ec407a', '#ab47bc'], build: buildTulip },
+  sunflower: { name: { vi: 'Hướng dương', en: 'Sunflower' }, weight: 1, stemH: 0.7, height: [0.9, 1.8], palette: ['#ffca28', '#ffb300', '#ffd54f'], build: buildSunflower },
+  lavender: { name: { vi: 'Oải hương', en: 'Lavender' }, weight: 2, stemH: 0.3, height: [0.7, 1.9], palette: ['#9575cd', '#7e57c2', '#b39ddb'], build: buildLavender },
+  dandelion: { name: { vi: 'Bồ công anh', en: 'Dandelion' }, weight: 2, stemH: 0.3, height: [0.6, 1.6], palette: ['#ffffff', '#fffde7'], build: buildDandelion },
+  bluebell: { name: { vi: 'Hoa chuông', en: 'Bluebell' }, weight: 2, stemH: 0.22, height: [0.8, 1.8], palette: ['#5c6bc0', '#42a5f5', '#ce93d8'], build: buildBluebell },
+  rose: { name: { vi: 'Hoa hồng', en: 'Rose' }, weight: 1, stemH: 0.32, height: [0.8, 1.6], palette: ['#e91e63', '#f06292', '#ff8a80', '#ffffff'], build: buildRose },
+  buttercup: { name: { vi: 'Mao lương', en: 'Buttercup' }, weight: 3, stemH: 0.12, height: [0.6, 1.5], palette: ['#ffeb3b', '#fff176'], build: buildButtercup },
 };
 
 /** A flower as a plain Group with its blossom coloured (for the model viewer). */

@@ -1,5 +1,6 @@
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import { t } from './i18n.js';
 
 // Head pose from the webcam with MediaPipe Face Landmarker. The facial
 // transformation matrix gives the head rotation directly; we express it
@@ -92,10 +93,10 @@ export class HeadTracker {
 
   async start(onStatus = () => {}) {
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      throw new Error('Trình duyệt không cho phép dùng camera ở đây (cần mở bằng https:// hoặc localhost).');
+      throw new Error(t('tracker.insecure'));
     }
     if (!this.stream) {
-      onStatus('Đang xin quyền dùng camera…');
+      onStatus(t('tracker.permission'));
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
         audio: false,
@@ -105,9 +106,9 @@ export class HeadTracker {
     }
     if (!this.landmarker) {
       try {
-        onStatus('Đang tải bộ xử lý MediaPipe…');
+        onStatus(t('tracker.runtime'));
         const fileset = await FilesetResolver.forVisionTasks(WASM_PATH);
-        onStatus('Đang tải model nhận diện khuôn mặt…');
+        onStatus(t('tracker.model'));
         this.landmarker = await this.create(fileset, 'GPU').catch((err) => {
           console.warn('GPU delegate unavailable, falling back to CPU', err);
           return this.create(fileset, 'CPU');
@@ -185,7 +186,7 @@ export class HeadTracker {
 
   /** Records the current head pose as "straight ahead". */
   calibrate(durationMs = 1000, timeoutMs = 5000) {
-    this.calibration?.reject(new Error('Đã huỷ hiệu chỉnh.'));
+    this.calibration?.reject(new Error(t('tracker.cancelled')));
     return new Promise((resolve, reject) => {
       this.calibration = { samples: [], start: performance.now(), durationMs, timeoutMs, resolve, reject };
     });
@@ -202,7 +203,7 @@ export class HeadTracker {
       c.resolve();
     } else if (elapsed > c.timeoutMs) {
       this.calibration = null;
-      c.reject(new Error('Không nhận diện được khuôn mặt. Hãy nhìn thẳng vào camera và thử lại.'));
+      c.reject(new Error(t('tracker.noFace')));
     }
   }
 }

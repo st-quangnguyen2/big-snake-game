@@ -132,6 +132,24 @@ h3 small { color: var(--muted); font-size: 13px; font-weight: 500; }
 .title h1 { margin: 0; font-size: 44px; line-height: 1; color: var(--accent-ink); letter-spacing: 0.5px; }
 .title p { margin: 4px 0 0; color: var(--muted); font-size: 18px; }
 
+/* VI / EN switch in the menu title. The menu stays hidden until its text is in the chosen language. */
+html.i18n-pending #screen-menu .card { visibility: hidden; }
+.lang-switch { display: flex; flex: none; align-self: flex-start; gap: 2px; margin-left: auto; padding: 3px; border-radius: 12px; background: var(--surface); }
+.lang-switch button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+.lang-switch button:hover { color: var(--green-ink); }
+.lang-switch button.active { background: var(--yellow); color: #17331f; box-shadow: 0 2px 0 #e2b317; }
+
 .seg { display: flex; flex-wrap: wrap; gap: 8px; }
 .seg button {
   flex: 1;
@@ -499,4 +517,10 @@ h3 small { color: var(--muted); font-size: 13px; font-weight: 500; }
   .catch-badge { padding: 2px 7px 2px 4px; font-size: 14px; }
   .catch-badge .icon { font-size: 16px; }
   .hud-warn { max-width: calc(100% - 32px); bottom: 80px; }
+}
+
+/* Phones: the language switch gets its own row so the title keeps its width. */
+@media (max-width: 520px) {
+  .title { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; }
+  .lang-switch { grid-column: 1 / -1; grid-row: 1; justify-self: end; margin-bottom: 2px; }
 }

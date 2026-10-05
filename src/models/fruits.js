@@ -247,32 +247,32 @@ export function buildWatermelon() {
 
 export const FRUIT_TYPES = {
   apple: {
-    name: 'Táo', emoji: '🍎', points: 10, growth: 1, radius: 0.42, color: '#e8322f', weight: 30,
-    desc: 'Trái cây phổ biến nhất trên bản đồ.', build: buildApple,
+    name: { vi: 'Táo', en: 'Apple' }, emoji: '🍎', points: 10, growth: 1, radius: 0.42, color: '#e8322f', weight: 30,
+    desc: { vi: 'Trái cây phổ biến nhất trên bản đồ.', en: 'The most common fruit on the map.' }, build: buildApple,
   },
   orange: {
-    name: 'Cam', emoji: '🍊', points: 12, growth: 1, radius: 0.42, color: '#fb8a1e', weight: 22,
-    desc: 'Vỏ sần, xuất hiện thường xuyên.', build: buildOrange,
+    name: { vi: 'Cam', en: 'Orange' }, emoji: '🍊', points: 12, growth: 1, radius: 0.42, color: '#fb8a1e', weight: 22,
+    desc: { vi: 'Vỏ sần, xuất hiện thường xuyên.', en: 'Dimpled peel, shows up often.' }, build: buildOrange,
   },
   banana: {
-    name: 'Chuối', emoji: '🍌', points: 15, growth: 1, radius: 0.48, color: '#ffd43b', weight: 18,
-    desc: 'Nải 3 quả.', build: buildBanana,
+    name: { vi: 'Chuối', en: 'Banana' }, emoji: '🍌', points: 15, growth: 1, radius: 0.48, color: '#ffd43b', weight: 18,
+    desc: { vi: 'Nải 3 quả.', en: 'A bunch of three.' }, build: buildBanana,
   },
   strawberry: {
-    name: 'Dâu tây', emoji: '🍓', points: 15, growth: 1, radius: 0.36, color: '#e8283c', weight: 16,
-    desc: 'Nhỏ, khó nhìn hơn một chút.', build: buildStrawberry,
+    name: { vi: 'Dâu tây', en: 'Strawberry' }, emoji: '🍓', points: 15, growth: 1, radius: 0.36, color: '#e8283c', weight: 16,
+    desc: { vi: 'Nhỏ, khó nhìn hơn một chút.', en: 'Small and a little harder to spot.' }, build: buildStrawberry,
   },
   grape: {
-    name: 'Nho', emoji: '🍇', points: 20, growth: 2, radius: 0.42, color: '#7d3c98', weight: 10,
-    desc: 'Chùm nho, rắn dài thêm 2 đốt.', build: buildGrape,
+    name: { vi: 'Nho', en: 'Grapes' }, emoji: '🍇', points: 20, growth: 2, radius: 0.42, color: '#7d3c98', weight: 10,
+    desc: { vi: 'Chùm nho, rắn dài thêm 2 đốt.', en: 'A bunch of grapes — the snake grows 2 segments.' }, build: buildGrape,
   },
   watermelon: {
-    name: 'Dưa hấu', emoji: '🍉', points: 30, growth: 3, radius: 0.55, color: '#ff4d5e', weight: 6,
-    desc: 'Hiếm, to, rắn dài thêm 3 đốt.', build: buildWatermelon,
+    name: { vi: 'Dưa hấu', en: 'Watermelon' }, emoji: '🍉', points: 30, growth: 3, radius: 0.55, color: '#ff4d5e', weight: 6,
+    desc: { vi: 'Hiếm, to, rắn dài thêm 3 đốt.', en: 'Rare and big — the snake grows 3 segments.' }, build: buildWatermelon,
   },
   golden: {
-    name: 'Táo vàng', emoji: '⭐', points: 100, growth: 2, radius: 0.46, color: '#ffc928', weight: 0,
+    name: { vi: 'Táo vàng', en: 'Golden apple' }, emoji: '⭐', points: 100, growth: 2, radius: 0.46, color: '#ffc928', weight: 0,
     special: true, lifetime: 10,
-    desc: 'Xuất hiện ngẫu nhiên, chỉ tồn tại 10 giây.', build: buildGoldenApple,
+    desc: { vi: 'Xuất hiện ngẫu nhiên, chỉ tồn tại 10 giây.', en: 'Appears at random and only lasts 10 seconds.' }, build: buildGoldenApple,
   },
 };

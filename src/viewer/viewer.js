@@ -14,6 +14,7 @@ import { Prey } from '../prey.js';
 import { buildWorld, groundHeight, COLLIDERS, DEFAULT_GRASS } from '../world.js';
 import { THEMES } from '../themes.js';
 import { FLOWER_TYPES, buildFlowerPlant } from '../models/flowers.js';
+import { t, tr, getLang, setLang, applyI18n } from '../i18n.js';
 import './viewer.css';
 
 // ---------------------------------------------------------------- renderer
@@ -213,18 +214,35 @@ function label(html, y = 1.25) {
 
 // ---------------------------------------------------------------- catalogue
 
+// Names, descriptions and stats are { vi, en } pairs (or plain values), shown with tr().
+const L = (vi, en) => ({ vi, en });
+const CAT = {
+  snake: L('Rắn', 'Snake'),
+  fruit: L('Trái cây', 'Fruit'),
+  animal: L('Động vật nhỏ', 'Small animals'),
+  env: L('Môi trường', 'Environment'),
+  overview: L('Tổng quan', 'Overview'),
+};
 const ITEMS = [];
 const add = (category, id, name, emoji, make, info = {}) => ITEMS.push({ category, id, name, emoji, make, info });
 
-add('Rắn', 'snake', 'Rắn của người chơi', '🐍', () => {
+add(CAT.snake, 'snake', L('Rắn của người chơi', 'Player snake'), '🐍', () => {
   const s = figureEightSnake();
   return { ...s, radius: 3.6, center: new THREE.Vector3(0, 0.4, 0), view: new THREE.Vector3(0.4, 0.75, 1), pedestalRadius: 4.4 };
 }, {
-  desc: 'Luôn bò về phía trước, không thể lùi — đầu người chơi chỉ điều khiển rẽ trái/phải. Mỗi lần ăn, một "ngụm" chạy dọc thân và thân dài thêm. Bụng màu sáng, lưng có sọc vàng.',
-  stats: [['Tốc độ', '5.4 → 7.6 đv/giây'], ['Tăng tốc', '× 1.65'], ['Độ dài ban đầu', '8 đốt'], ['Va chạm', '−10 điểm, ngắn lại 20%']],
+  desc: L(
+    'Luôn bò về phía trước, không thể lùi — đầu người chơi chỉ điều khiển rẽ trái/phải. Mỗi lần ăn, một "ngụm" chạy dọc thân và thân dài thêm. Bụng màu sáng, lưng có sọc vàng.',
+    'Always slithers forward and can never reverse — the player\'s head only steers left/right. Each meal sends a "gulp" down the body and the snake grows. Light belly, yellow bands on the back.',
+  ),
+  stats: [
+    [L('Tốc độ', 'Speed'), L('5.4 → 7.6 đv/giây', '5.4 → 7.6 u/s')],
+    [L('Tăng tốc', 'Boost'), '× 1.65'],
+    [L('Độ dài ban đầu', 'Starting length'), L('8 đốt', '8 segments')],
+    [L('Va chạm', 'Crash'), L('−10 điểm, ngắn lại 20%', '−10 points, 20% shorter')],
+  ],
 });
 
-add('Rắn', 'snake-head', 'Đầu rắn (cận cảnh)', '👀', () => {
+add(CAT.snake, 'snake-head', L('Đầu rắn (cận cảnh)', 'Snake head (close-up)'), '👀', () => {
   const head = buildSnakeHead();
   head.position.y = 0.46;
   let phase = 0;
@@ -241,15 +259,20 @@ add('Rắn', 'snake-head', 'Đầu rắn (cận cảnh)', '👀', () => {
       head.userData.skull.rotation.z = Math.sin(t * 1.3) * 0.05;
     },
   };
-}, { desc: 'Mắt vàng với đồng tử dọc, liếc nhìn xung quanh (rắn không có mí nên không chớp mắt). Lưỡi chẻ đôi thè ra mỗi 1.8 giây.' });
+}, {
+  desc: L(
+    'Mắt vàng với đồng tử dọc, liếc nhìn xung quanh (rắn không có mí nên không chớp mắt). Lưỡi chẻ đôi thè ra mỗi 1.8 giây.',
+    'Yellow eyes with slit pupils that glance around (snakes have no eyelids, so they never blink). The forked tongue flicks out every 1.8 seconds.',
+  ),
+});
 
-add('Rắn', 'snake-heads', 'Các kiểu đầu', '🎭', () => {
+add(CAT.snake, 'snake-heads', L('Các kiểu đầu', 'Head styles'), '🎭', () => {
   const styles = Object.entries(HEAD_STYLES);
   const parts = styles.map(([id, style], i) => {
     const head = buildSnakeHead({ skin: SKINS.green, style: id });
     head.position.set((i - (styles.length - 1) / 2) * 1.6, 0.46, 0);
     head.rotation.y = 0.35;
-    head.add(label(`<span>${style.emoji} ${style.name}</span>`, 1.15));
+    head.add(label(`<span>${style.emoji} ${tr(style.name)}</span>`, 1.15));
     let phase = i * 0.37;
     return {
       object: head,
@@ -262,9 +285,14 @@ add('Rắn', 'snake-heads', 'Các kiểu đầu', '🎭', () => {
     };
   });
   return combine(parts, { radius: 6.8, center: new THREE.Vector3(0, 0.6, 0), view: new THREE.Vector3(0, 0.45, 1), pedestal: false, shift: false });
-}, { desc: 'Tám kiểu đầu người chơi chọn trong menu Tuỳ biến: cổ điển, dễ thương, ngầu, nhà vua, tiệc tùng, rồng, nơ xinh và mèo con.' });
+}, {
+  desc: L(
+    'Tám kiểu đầu người chơi chọn trong menu Tuỳ biến: cổ điển, dễ thương, ngầu, nhà vua, tiệc tùng, rồng, nơ xinh và mèo con.',
+    'The eight head styles players pick in the Customize menu: classic, cute, cool, king, party, dragon, bow and kitty.',
+  ),
+});
 
-add('Rắn', 'snake-skins', 'Các màu rắn', '🌈', () => {
+add(CAT.snake, 'snake-skins', L('Các màu rắn', 'Snake colors'), '🌈', () => {
   const parts = Object.entries(SKINS).map(([id, skin], i) => {
     const holder = new THREE.Group();
     const snake = new Snake(holder);
@@ -276,7 +304,7 @@ add('Rắn', 'snake-skins', 'Các màu rắn', '🌈', () => {
     snake.updateVisuals(0, 0);
     const anchor = new THREE.Object3D();
     anchor.position.set(snake.head.x, 0, snake.head.z);
-    anchor.add(label(`<span>${skin.name}</span>`, 1.25));
+    anchor.add(label(`<span>${tr(skin.name)}</span>`, 1.25));
     holder.add(anchor);
     let clock = i;
     return {
@@ -289,42 +317,49 @@ add('Rắn', 'snake-skins', 'Các màu rắn', '🌈', () => {
     };
   });
   return combine(parts, { radius: 7.6, center: new THREE.Vector3(0, 0.4, 0), view: new THREE.Vector3(0, 1.2, 1), pedestal: false, shift: false });
-}, { desc: 'Chín màu da với hoa văn riêng: sọc, kim cương, chấm bi, vằn hổ và cầu vồng.' });
+}, { desc: L('Chín màu da với hoa văn riêng: sọc, kim cương, chấm bi, vằn hổ và cầu vồng.', 'Nine skins, each with its own pattern: bands, diamonds, spots, tiger stripes and rainbow.') });
 
 for (const [id, def] of Object.entries(FRUIT_TYPES)) {
-  add('Trái cây', id, def.name, def.emoji, () => ({ ...floatingFruit(def), radius: 1.0, center: new THREE.Vector3(0, 0.55, 0) }), {
-    desc: def.desc,
-    stats: [['Điểm', def.points], ['Dài thêm', `+${def.growth} đốt`], ['Bán kính va chạm', def.radius], ...(def.lifetime ? [['Tồn tại', `${def.lifetime} giây`]] : [])],
-  });
-}
-
-for (const [id, def] of Object.entries(ANIMAL_TYPES)) {
-  add('Động vật nhỏ', id, def.name, def.emoji, () => ({ ...circlingAnimal(def), radius: 1.55, center: new THREE.Vector3(0, 0.35, 0) }), {
+  add(CAT.fruit, id, def.name, def.emoji, () => ({ ...floatingFruit(def), radius: 1.0, center: new THREE.Vector3(0, 0.55, 0) }), {
     desc: def.desc,
     stats: [
-      ['Điểm', def.points], ['Dài thêm', `+${def.growth} đốt`],
-      ['Di chuyển', def.move === 'hop' ? 'Nhảy' : 'Chạy'],
-      ['Tốc độ chạy trốn', `${def.fleeSpeed} đv/giây`], ['Phát hiện rắn từ', `${def.fleeRadius} đv`],
+      [L('Điểm', 'Points'), def.points],
+      [L('Dài thêm', 'Growth'), L(`+${def.growth} đốt`, `+${def.growth} segments`)],
+      [L('Bán kính va chạm', 'Hit radius'), def.radius],
+      ...(def.lifetime ? [[L('Tồn tại', 'Lasts'), L(`${def.lifetime} giây`, `${def.lifetime} s`)]] : []),
     ],
   });
 }
 
-const envItem = (id, name, emoji, build, radius, centerY, desc) => add('Môi trường', id, name, emoji, () => ({
+for (const [id, def] of Object.entries(ANIMAL_TYPES)) {
+  add(CAT.animal, id, def.name, def.emoji, () => ({ ...circlingAnimal(def), radius: 1.55, center: new THREE.Vector3(0, 0.35, 0) }), {
+    desc: def.desc,
+    stats: [
+      [L('Điểm', 'Points'), def.points],
+      [L('Dài thêm', 'Growth'), L(`+${def.growth} đốt`, `+${def.growth} segments`)],
+      [L('Di chuyển', 'Moves by'), def.move === 'hop' ? L('Nhảy', 'Hopping') : L('Chạy', 'Running')],
+      [L('Tốc độ chạy trốn', 'Flee speed'), L(`${def.fleeSpeed} đv/giây`, `${def.fleeSpeed} u/s`)],
+      [L('Phát hiện rắn từ', 'Spots the snake at'), L(`${def.fleeRadius} đv`, `${def.fleeRadius} u`)],
+    ],
+  });
+}
+
+const envItem = (id, name, emoji, build, radius, centerY, desc) => add(CAT.env, id, name, emoji, () => ({
   object: build(), radius, center: new THREE.Vector3(0, centerY, 0),
 }), { desc });
 
-envItem('pine', 'Cây thông', '🌲', buildPineTree, 2.7, 1.7, 'Trang trí ngoài hàng rào.');
-envItem('round-tree', 'Cây tán tròn', '🌳', buildRoundTree, 2.6, 1.6, 'Trang trí ngoài hàng rào.');
-envItem('bush', 'Bụi cây', '🌿', buildBush, 1.1, 0.35, 'Đặt sát hàng rào.');
-envItem('rock', 'Tảng đá nhỏ', '🪨', buildRock, 1.1, 0.3, 'Đặt rải rác bên ngoài hàng rào.');
-envItem('boulder', 'Tảng đá lớn (vật cản)', '⛰️', buildBoulder, 1.7, 0.6, 'Vật cản trong đấu trường — rắn đâm vào sẽ mất 10 điểm và ngắn lại; thú nhỏ chạy vòng qua.');
-envItem('stump', 'Gốc cây (vật cản)', '🪵', buildStump, 1.2, 0.35, 'Vật cản có vân gỗ và một cây nấm nhỏ — rắn đâm vào sẽ bị phạt như đâm hàng rào.');
-envItem('berry-bush', 'Bụi quả mọng', '🫐', buildBerryBush, 1.4, 0.55, 'Rắn bò xuyên qua được: bụi tách ra hai bên rồi rung bật lại, lá bay tung và có tiếng xào xạc.');
-envItem('tree-oak', 'Cây sồi to', '🌳', () => buildBigTree('oak'), 6.4, 4.0, 'Cây to trong đấu trường: thân cây là vật cản, tán cây tự mờ đi khi rắn bò bên dưới.');
-envItem('tree-blossom', 'Cây hoa anh đào', '🌸', () => buildBigTree('blossom'), 6.4, 4.0, 'Cây to trong đấu trường với tán hoa hồng.');
-envItem('tree-apple', 'Cây táo', '🍎', () => buildBigTree('apple'), 6.4, 4.0, 'Cây to trong đấu trường, có táo đỏ treo dưới tán.');
-envItem('mud', 'Vũng bùn', '🟤', () => buildMudPuddle(1.6, 2), 1.9, 0.05, 'Rắn bò qua sẽ chậm lại 40% và bắn bùn tung toé.');
-add('Môi trường', 'flowers', 'Các loại hoa', '🌸', () => {
+envItem('pine', L('Cây thông', 'Pine tree'), '🌲', buildPineTree, 2.7, 1.7, L('Trang trí ngoài hàng rào.', 'Decoration outside the fence.'));
+envItem('round-tree', L('Cây tán tròn', 'Round tree'), '🌳', buildRoundTree, 2.6, 1.6, L('Trang trí ngoài hàng rào.', 'Decoration outside the fence.'));
+envItem('bush', L('Bụi cây', 'Bush'), '🌿', buildBush, 1.1, 0.35, L('Đặt sát hàng rào.', 'Placed along the fence.'));
+envItem('rock', L('Tảng đá nhỏ', 'Small rock'), '🪨', buildRock, 1.1, 0.3, L('Đặt rải rác bên ngoài hàng rào.', 'Scattered outside the fence.'));
+envItem('boulder', L('Tảng đá lớn (vật cản)', 'Boulder (obstacle)'), '⛰️', buildBoulder, 1.7, 0.6, L('Vật cản trong đấu trường — rắn đâm vào sẽ mất 10 điểm và ngắn lại; thú nhỏ chạy vòng qua.', 'An obstacle in the arena — crashing into it costs 10 points and shortens the snake; small animals run around it.'));
+envItem('stump', L('Gốc cây (vật cản)', 'Stump (obstacle)'), '🪵', buildStump, 1.2, 0.35, L('Vật cản có vân gỗ và một cây nấm nhỏ — rắn đâm vào sẽ bị phạt như đâm hàng rào.', 'An obstacle with wood rings and a little mushroom — crashing into it costs the same as hitting the fence.'));
+envItem('berry-bush', L('Bụi quả mọng', 'Berry bush'), '🫐', buildBerryBush, 1.4, 0.55, L('Rắn bò xuyên qua được: bụi tách ra hai bên rồi rung bật lại, lá bay tung và có tiếng xào xạc.', 'The snake can slither through: the bush parts to both sides and springs back, with flying leaves and a rustle.'));
+envItem('tree-oak', L('Cây sồi to', 'Big oak'), '🌳', () => buildBigTree('oak'), 6.4, 4.0, L('Cây to trong đấu trường: thân cây là vật cản, tán cây tự mờ đi khi rắn bò bên dưới.', 'A big arena tree: the trunk is an obstacle and the canopy fades out while the snake is underneath.'));
+envItem('tree-blossom', L('Cây hoa anh đào', 'Cherry blossom'), '🌸', () => buildBigTree('blossom'), 6.4, 4.0, L('Cây to trong đấu trường với tán hoa hồng.', 'A big arena tree with a pink blossom canopy.'));
+envItem('tree-apple', L('Cây táo', 'Apple tree'), '🍎', () => buildBigTree('apple'), 6.4, 4.0, L('Cây to trong đấu trường, có táo đỏ treo dưới tán.', 'A big arena tree with red apples hanging under the canopy.'));
+envItem('mud', L('Vũng bùn', 'Mud puddle'), '🟤', () => buildMudPuddle(1.6, 2), 1.9, 0.05, L('Rắn bò qua sẽ chậm lại 40% và bắn bùn tung toé.', 'Slows the snake by 40% and splashes mud everywhere.'));
+add(CAT.env, 'flowers', L('Các loại hoa', 'Flowers'), '🌸', () => {
   const types = Object.entries(FLOWER_TYPES);
   const parts = types.map(([id, def], i) => {
     const holder = new THREE.Group();
@@ -338,21 +373,26 @@ add('Môi trường', 'flowers', 'Các loại hoa', '🌸', () => {
       f.scale.setScalar(0.9 + k * 0.12);
       holder.add(f);
     }
-    holder.add(label(`<span>${def.name}</span>`, def.stemH + 0.35));
+    holder.add(label(`<span>${tr(def.name)}</span>`, def.stemH + 0.35));
     return { object: holder };
   });
   return combine(parts, { radius: 1.7, center: new THREE.Vector3(0, 0.3, 0) });
-}, { desc: 'Chín loại hoa mọc thành từng khóm trong đấu trường, mỗi bông cao thấp khác nhau và ngả ra khi rắn bò qua.' });
-add('Môi trường', 'grass', 'Cụm cỏ', '🌱', () => {
+}, { desc: L('Chín loại hoa mọc thành từng khóm trong đấu trường, mỗi bông cao thấp khác nhau và ngả ra khi rắn bò qua.', 'Nine kinds of flowers grow in clumps around the arena, each at its own height, leaning aside as the snake passes.') });
+add(CAT.env, 'grass', L('Cụm cỏ', 'Grass clump'), '🌱', () => {
   const parts = [16, 24, 32].map((count, i) => {
     const tuft = buildGrassTuft(count);
     tuft.position.x = (i - 1) * 0.6;
-    tuft.add(label(`<span>${count} phiến</span>`, 1.0));
+    tuft.add(label(`<span>${tr(L(`${count} phiến`, `${count} blades`))}</span>`, 1.0));
     return { object: tuft };
   });
   return combine(parts, { radius: 1.0, center: new THREE.Vector3(0, 0.4, 0) });
-}, { desc: 'Mỗi bụi có 16–32 phiến (chỉnh ở menu Tuỳ biến → Cỏ): phiến giữa cao, phiến ngoài thấp và xoè ra. Gốc tối, ngọn sáng; trong game cỏ uốn cong quanh gốc khi rắn bò qua.' });
-envItem('fence', 'Hàng rào gỗ', '🚧', () => {
+}, {
+  desc: L(
+    'Mỗi bụi có 16–32 phiến (chỉnh ở menu Tuỳ biến → Cỏ): phiến giữa cao, phiến ngoài thấp và xoè ra. Gốc tối, ngọn sáng; trong game cỏ uốn cong quanh gốc khi rắn bò qua.',
+    'Each clump has 16–32 blades (set in Customize → Grass): tall blades in the middle, shorter ones fanning out. Dark roots, light tips; in the game the blades bend around their roots as the snake passes.',
+  ),
+});
+envItem('fence', L('Hàng rào gỗ', 'Wooden fence'), '🚧', () => {
   const g = new THREE.Group();
   for (let i = 0; i < 3; i++) {
     const s = buildFenceSection();
@@ -363,9 +403,9 @@ envItem('fence', 'Hàng rào gỗ', '🚧', () => {
   end.position.x = 3;
   g.add(end);
   return g;
-}, 3.8, 0.6, 'Bao quanh đấu trường — đâm vào sẽ mất 1 mạng.');
+}, 3.8, 0.6, L('Bao quanh đấu trường — đâm vào sẽ mất 10 điểm và rắn ngắn lại.', 'Surrounds the arena — crashing into it costs 10 points and shortens the snake.'));
 
-add('Tổng quan', 'lineup', 'Tất cả con mồi', '📏', () => {
+add(CAT.overview, 'lineup', L('Tất cả con mồi', 'All prey'), '📏', () => {
   const entries = [...Object.values(FRUIT_TYPES), ...Object.values(ANIMAL_TYPES)];
   const spacing = 1.3;
   const parts = entries.map((def, i) => {
@@ -389,20 +429,20 @@ add('Tổng quan', 'lineup', 'Tất cả con mồi', '📏', () => {
     }
     partItem.object.position.x = x;
     partItem.object.position.z = -(x * x) * 0.025;
-    partItem.object.add(label(`<span>${def.emoji} ${def.name}</span><b>${def.points}đ</b>`, 1.35));
+    partItem.object.add(label(`<span>${def.emoji} ${tr(def.name)}</span><b>${tr(L(`${def.points}đ`, `${def.points} pts`))}</b>`, 1.35));
     return partItem;
   });
   const head = buildSnakeHead();
   head.position.set(-((entries.length - 1) / 2) * spacing - 1.5, 0.46, -1.6);
   head.rotation.y = 0.9;
-  head.add(label('<span>🐍 Đầu rắn</span><b>để so sánh</b>', 1.0));
+  head.add(label(tr(L('<span>🐍 Đầu rắn</span><b>để so sánh</b>', '<span>🐍 Snake head</span><b>for scale</b>')), 1.0));
   parts.push({ object: head });
   return combine(parts, { radius: 7.8, center: new THREE.Vector3(-0.7, 0.6, -0.6), view: new THREE.Vector3(0, 0.38, 1), pedestal: false, shift: false });
-}, { desc: 'Toàn bộ con mồi xếp cạnh nhau ở đúng tỉ lệ trong game, kèm điểm số. Đầu rắn đặt bên trái để so sánh kích thước.' });
+}, { desc: L('Toàn bộ con mồi xếp cạnh nhau ở đúng tỉ lệ trong game, kèm điểm số. Đầu rắn đặt bên trái để so sánh kích thước.', 'Every prey side by side at in-game scale, with points. The snake head on the left shows the size.') });
 
 const sceneOptions = { theme: 'meadow', night: false };
 
-add('Tổng quan', 'diorama', 'Cảnh mẫu trong game', '🏞️', () => {
+add(CAT.overview, 'diorama', L('Cảnh mẫu trong game', 'Sample game scene'), '🏞️', () => {
   // The real game arena (hills, big trees, berry bushes, mud, rocks, dense grass,
   // flowers) with a snake slithering through it and prey around.
   const holder = new THREE.Group();
@@ -474,7 +514,12 @@ add('Tổng quan', 'diorama', 'Cảnh mẫu trong game', '🏞️', () => {
       world.dispose();
     },
   };
-}, { desc: 'Một góc của chính đấu trường trong game: đồi, cây to, bụi quả, bùn, đá, cỏ rậm và hoa rẽ ra khi rắn và thú đi qua. Dùng ô chọn phía trên để xem các theme sân và ban đêm.' });
+}, {
+  desc: L(
+    'Một góc của chính đấu trường trong game: đồi, cây to, bụi quả, bùn, đá, cỏ rậm và hoa rẽ ra khi rắn và thú đi qua. Dùng ô chọn phía trên để xem các theme sân và ban đêm.',
+    'A corner of the real game arena: hills, big trees, berry bushes, mud, rocks, and dense grass and flowers that part as the snake and animals pass. Use the controls above to try the arena themes and night mode.',
+  ),
+});
 
 // ---------------------------------------------------------------- UI
 
@@ -485,19 +530,20 @@ let current = null;
 let currentIndex = -1;
 
 function renderList() {
-  let lastCategory = '';
+  list.replaceChildren();
+  let lastCategory = null;
   ITEMS.forEach((item, index) => {
     if (item.category !== lastCategory) {
       lastCategory = item.category;
       const h = document.createElement('div');
       h.className = 'cat';
-      h.textContent = item.category;
+      h.textContent = tr(item.category);
       list.appendChild(h);
     }
     const btn = document.createElement('button');
-    btn.className = 'item';
+    btn.className = index === currentIndex ? 'item active' : 'item';
     btn.dataset.index = index;
-    btn.innerHTML = `<span class="emoji">${item.emoji}</span><span>${item.name}</span>`;
+    btn.innerHTML = `<span class="emoji">${item.emoji}</span><span>${tr(item.name)}</span>`;
     btn.addEventListener('click', () => select(index));
     list.appendChild(btn);
   });
@@ -523,8 +569,9 @@ function disposeCurrent() {
   current = null;
 }
 
-function select(index) {
-  if (index === currentIndex) return;
+/** Shows item `index`; `rebuild` remakes the current item in place (new labels) without moving the camera. */
+function select(index, { rebuild = false } = {}) {
+  if (index === currentIndex && !rebuild) return;
   disposeCurrent();
   currentIndex = index;
   const item = ITEMS[index];
@@ -536,7 +583,8 @@ function select(index) {
     if (o.isMesh && o.castShadow !== false) o.castShadow = true;
   });
   current = { item, instance };
-  frame(instance);
+  if (rebuild) applyViewOffset();
+  else frame(instance);
   showInfo(item);
   list.querySelectorAll('.item').forEach((b) => b.classList.toggle('active', Number(b.dataset.index) === index));
   history.replaceState(null, '', `#${item.id}`);
@@ -578,23 +626,27 @@ function applyViewOffset() {
 
 function showInfo(item) {
   document.getElementById('info-emoji').textContent = item.emoji;
-  document.getElementById('info-cat').textContent = item.category;
-  document.getElementById('info-name').textContent = item.name;
-  document.getElementById('info-desc').textContent = item.info.desc ?? '';
+  document.getElementById('info-cat').textContent = tr(item.category);
+  document.getElementById('info-name').textContent = tr(item.name);
+  document.getElementById('info-desc').textContent = tr(item.info.desc);
   const stats = document.getElementById('info-stats');
   stats.innerHTML = '';
   for (const [k, v] of item.info.stats ?? []) {
     const dt = document.createElement('dt');
-    dt.textContent = k;
+    dt.textContent = tr(k);
     const dd = document.createElement('dd');
-    dd.textContent = v;
+    dd.textContent = typeof v === 'object' ? tr(v) : v;
     stats.append(dt, dd);
   }
 }
 
 document.getElementById('btn-reset').addEventListener('click', () => current && frame(current.instance));
 const themeSelect = document.getElementById('opt-scene-theme');
-themeSelect.innerHTML = Object.entries(THEMES).map(([id, t]) => `<option value="${id}">${t.emoji} ${t.name}</option>`).join('');
+function renderThemeOptions() {
+  const value = themeSelect.value || sceneOptions.theme;
+  themeSelect.innerHTML = Object.entries(THEMES).map(([id, theme]) => `<option value="${id}">${theme.emoji} ${tr(theme.name)}</option>`).join('');
+  themeSelect.value = value;
+}
 themeSelect.addEventListener('change', () => current?.instance.setOptions?.({ theme: themeSelect.value }));
 document.getElementById('opt-scene-night').addEventListener('change', (e) => current?.instance.setOptions?.({ night: e.target.checked }));
 window.addEventListener('keydown', (e) => {
@@ -617,7 +669,25 @@ function resize() {
 new ResizeObserver(resize).observe(viewport);
 resize();
 
-renderList();
+/** Re-renders all text in the chosen language; the open model is rebuilt so its 3D labels follow. */
+function applyLanguage() {
+  applyI18n();
+  document.title = t('viewer.title');
+  for (const b of langSwitch.querySelectorAll('button')) b.classList.toggle('active', b.dataset.value === getLang());
+  renderThemeOptions();
+  renderList();
+  if (currentIndex >= 0) select(currentIndex, { rebuild: true });
+}
+
+const langSwitch = document.getElementById('lang-switch');
+langSwitch.addEventListener('click', (e) => {
+  const value = e.target.closest('button')?.dataset.value;
+  if (!value || value === getLang()) return;
+  setLang(value);
+  applyLanguage();
+});
+
+applyLanguage();
 const fromHash = () => ITEMS.findIndex((i) => i.id === location.hash.slice(1));
 window.addEventListener('hashchange', () => { const i = fromHash(); if (i >= 0) select(i); });
 select(Math.max(0, fromHash()));

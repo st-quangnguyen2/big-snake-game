@@ -11,6 +11,7 @@ import { ANIMAL_TYPES } from './models/animals.js';
 import { THEMES } from './themes.js';
 import { SnakePreview } from './preview.js';
 import { GRASS_BLADES } from './models/environment.js';
+import { t, tr, getLang, setLang, applyI18n } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const ui = {
@@ -61,10 +62,9 @@ const audio = new GameAudio();
 audio.setVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume, muted: settings.muted });
 
 const NO_STEER = { turn: 0, boost: false, look: 0, degrees: 0 };
-const VIEW_NAMES = { near: '🐍 Gần', far: '🔭 Xa', top: '🛰️ Trên cao', first: '👁️ Góc nhìn thứ nhất' };
+const viewName = (view) => t(view === 'first' ? 'view.firstLong' : `view.${view}`);
 /** Music speeds up when this many seconds are left. */
 const HURRY_SECONDS = 20;
-const COUNTDOWN = ['3', '2', '1', 'BẮT ĐẦU!'];
 let head = NO_STEER;
 let screen = 'menu';
 let hudVisible = false;
@@ -105,7 +105,7 @@ function formatTime(seconds) {
 }
 
 function formatDate(timestamp) {
-  return new Date(timestamp).toLocaleString('vi-VN', {
+  return new Date(timestamp).toLocaleString(t('locale'), {
     day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit',
   });
 }
@@ -207,14 +207,14 @@ function drawFace(ctx) {
 function updateCalibration() {
   drawFace(calibCtx);
   const face = tracker.facePresent;
-  setText(ui.calibFace, face ? '✓ Đã thấy khuôn mặt' : 'Đang tìm khuôn mặt…');
+  setText(ui.calibFace, t(face ? 'calib.found' : 'calib.searching'));
   ui.calibFace.classList.toggle('ok', face);
   setKnob(ui.calibKnob, head.turn);
   ui.calibBoost.classList.toggle('on', head.boost);
   ui.calibLook.classList.toggle('on', head.look > 0.5 && !settings.viewLocked);
   ui.calibLook.classList.toggle('off', settings.viewLocked);
   const a = tracker.angles;
-  setText(ui.calibAngles, face ? `Xoay ${Math.round(a.yaw)}° · Cúi ${Math.round(a.pitch)}° · Nghiêng ${Math.round(a.roll)}°` : '');
+  setText(ui.calibAngles, face ? t('calib.angles', { yaw: Math.round(a.yaw), pitch: Math.round(a.pitch), roll: Math.round(a.roll) }) : '');
   ui.calibButton.disabled = !face || calibrating;
 }
 
@@ -286,14 +286,14 @@ function popup({ x, y }, text, color, sub = '', variant = '') {
 // ---------------------------------------------------------------- catch counter
 
 /** Counter slots: one per animal type plus all fruit together. */
-const CATCH_SLOTS = [...Object.entries(ANIMAL_TYPES).map(([type, def]) => ({ type, emoji: def.emoji, name: def.name })),
-  { type: 'fruit', emoji: '🍎', name: 'Trái cây' }];
+const CATCH_SLOTS = [...Object.entries(ANIMAL_TYPES).map(([type, def]) => ({ type, emoji: def.emoji })), { type: 'fruit', emoji: '🍎' }];
+const slotName = (type) => (type === 'fruit' ? t('catch.fruit') : tr(ANIMAL_TYPES[type].name));
 
 const caughtCount = (type) => (type === 'fruit' ? game.stats.fruits : game.stats.caught[type]);
 
 function resetCatchBar() {
-  ui.catchBar.innerHTML = CATCH_SLOTS.map(({ type, emoji, name }) => (
-    `<div class="catch-badge zero" data-type="${type}" title="${name}"><span class="icon">${emoji}</span><b>0</b></div>`
+  ui.catchBar.innerHTML = CATCH_SLOTS.map(({ type, emoji }) => (
+    `<div class="catch-badge zero" data-type="${type}" title="${slotName(type)}"><span class="icon">${emoji}</span><b>0</b></div>`
   )).join('');
 }
 
@@ -338,21 +338,21 @@ function onEat({ prey, points, combo, multiplier, screen: at }) {
   const comboText = combo > 1 ? ` · COMBO ×${multiplier}` : '';
   if (prey.kind === 'animal') {
     audio.catch(combo);
-    popup(at, `${prey.def.emoji} +${points}`, prey.def.color, `Bắt được ${prey.def.name}!${comboText}`, 'big');
+    popup(at, `${prey.def.emoji} +${points}`, prey.def.color, `${t('eat.caught', { name: tr(prey.def.name) })}${comboText}`, 'big');
     flyToBadge(prey.type, prey.def.emoji, at);
     return;
   }
   if (prey.type === 'golden') audio.golden();
   else audio.eat(combo);
-  popup(at, `+${points}`, prey.def.color, `${prey.def.name}${comboText}`);
+  popup(at, `+${points}`, prey.def.color, `${tr(prey.def.name)}${comboText}`);
   landInBadge('fruit');
 }
 
 function onHit({ kind, penalty }) {
   audio.hit();
   restartAnimation(ui.flash, 'on');
-  const what = kind === 'wall' ? 'Đâm vào hàng rào!' : 'Cắn phải thân mình!';
-  popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.42 }, penalty ? `−${penalty}` : 'Ối!', '#ff5a5a', `${what} Rắn ngắn lại`);
+  // kind: 'wall' | 'obstacle' | 'self'
+  popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.42 }, penalty ? `−${penalty}` : t('hit.oops'), '#ff5a5a', `${t(`hit.${kind}`)} ${t('hit.shrink')}`);
 }
 
 function onTick(secondsLeft) {
@@ -381,7 +381,7 @@ function onBush() {
 
 function onGolden() {
   audio.goldenAppear();
-  popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.22 }, '⭐ Táo vàng!', '#ffd84a', 'Nhanh lên, chỉ có 10 giây');
+  popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.22 }, t('golden.title'), '#ffd84a', t('golden.sub'));
 }
 
 function onEnd(result) {
@@ -392,17 +392,17 @@ function onEnd(result) {
   const { rank, isBest } = addRecord(record);
   audio.music.stop(0.3);
   audio.gameOver(isBest);
-  $('over-title').textContent = '⏰ Hết giờ!';
+  $('over-title').textContent = t('over.title');
   $('over-badge').classList.toggle('hidden', !isBest);
   $('over-score').textContent = result.score;
-  $('over-rank').textContent = rank > 0 ? `Hạng #${rank} trong bảng ${duration} phút` : 'Chưa lọt vào bảng kỷ lục — cố lên nhé!';
+  $('over-rank').textContent = rank > 0 ? t('over.rank', { rank, minutes: duration }) : t('over.unranked');
   $('over-length').textContent = result.length;
   $('over-fruits').textContent = result.fruits;
   $('over-animals').textContent = result.animals;
   $('over-golden').textContent = result.golden;
-  $('over-catch').innerHTML = CATCH_SLOTS.map(({ type, emoji, name }) => {
+  $('over-catch').innerHTML = CATCH_SLOTS.map(({ type, emoji }) => {
     const count = type === 'fruit' ? result.fruits : result.caught[type];
-    return `<span class="${count ? '' : 'zero'}" title="${name}">${emoji} × ${count}</span>`;
+    return `<span class="${count ? '' : 'zero'}" title="${slotName(type)}">${emoji} × ${count}</span>`;
   }).join('');
   // Let the player see the final moment before the results card appears.
   setTimeout(() => { if (game.mode === 'over') show('over'); }, 900);
@@ -419,7 +419,7 @@ async function startFromMenu() {
   }
   if (!tracker.ready) {
     show('loading');
-    $('loading-text').textContent = 'Đang khởi động…';
+    $('loading-text').textContent = t('loading.start');
     try {
       await tracker.start((text) => { $('loading-text').textContent = text; });
     } catch (err) {
@@ -432,39 +432,34 @@ async function startFromMenu() {
 
 function showError(err) {
   console.error(err);
-  const messages = {
-    NotAllowedError: 'Bạn chưa cho phép dùng camera. Hãy bấm biểu tượng camera trên thanh địa chỉ để cho phép, rồi bấm "Thử lại".',
-    NotFoundError: 'Không tìm thấy camera nào trên máy.',
-    OverconstrainedError: 'Không tìm thấy camera phù hợp.',
-    NotReadableError: 'Camera đang được ứng dụng khác sử dụng. Hãy đóng ứng dụng đó rồi thử lại.',
-  };
-  $('error-text').textContent = messages[err?.name] ?? `Không khởi động được nhận diện khuôn mặt: ${err?.message ?? err}`;
+  const known = ['NotAllowedError', 'NotFoundError', 'OverconstrainedError', 'NotReadableError'];
+  $('error-text').textContent = known.includes(err?.name) ? t(`error.${err.name}`) : t('error.generic', { message: err?.message ?? err });
   show('error');
 }
 
 function openCalibration() {
   setHud(false);
   show('calibrate');
-  $('calib-steer-hint').textContent = settings.steer === 'roll' ? 'nghiêng đầu sang trái / phải' : 'xoay đầu sang trái / phải';
-  $('calib-msg').textContent = calibrated ? 'Đã hiệu chỉnh trước đó — có thể vào game ngay.' : '';
-  ui.calibButton.textContent = calibrated ? '🎯 Hiệu chỉnh lại' : '🎯 Hiệu chỉnh';
+  $('calib-steer-hint').textContent = t(settings.steer === 'roll' ? 'calib.hintRoll' : 'calib.hintYaw');
+  $('calib-msg').textContent = calibrated ? t('calib.already') : '';
+  ui.calibButton.textContent = t(calibrated ? 'calib.recalibrate' : 'calib.calibrate');
   $('btn-play').disabled = !calibrated;
 }
 
 async function runCalibration() {
   calibrating = true;
-  ui.calibButton.textContent = 'Giữ yên…';
+  ui.calibButton.textContent = t('calib.hold');
   $('calib-msg').textContent = '';
   try {
     await tracker.calibrate(1000);
     calibrated = true;
     audio.beep(true);
-    $('calib-msg').textContent = '✓ Xong! Thử xoay đầu để kiểm tra hướng lái.';
+    $('calib-msg').textContent = t('calib.done');
   } catch (err) {
     $('calib-msg').textContent = err.message;
   } finally {
     calibrating = false;
-    ui.calibButton.textContent = calibrated ? '🎯 Hiệu chỉnh lại' : '🎯 Hiệu chỉnh';
+    ui.calibButton.textContent = t(calibrated ? 'calib.recalibrate' : 'calib.calibrate');
     $('btn-play').disabled = !calibrated;
   }
 }
@@ -472,13 +467,13 @@ async function runCalibration() {
 function showHint() {
   ui.hint.textContent = settings.control === 'camera'
     ? [
-      `↔ ${settings.steer === 'roll' ? 'Nghiêng đầu' : 'Xoay đầu'} để lái`,
-      settings.nod && 'Cúi đầu: tăng tốc',
-      settings.lookUp && 'Ngẩng đầu: nhìn xa',
-      'L: khoá góc nhìn',
-      'Esc: tạm dừng',
+      t(settings.steer === 'roll' ? 'hint.steerRoll' : 'hint.steerYaw'),
+      settings.nod && t('hint.nod'),
+      settings.lookUp && t('hint.look'),
+      t('hint.lock'),
+      t('hint.pause'),
     ].filter(Boolean).join(' · ')
-    : '← → / A D: lái · Space: tăng tốc · ↓ / S: nhìn xa · C: đổi góc nhìn · L: khoá góc nhìn · Esc: tạm dừng';
+    : t('hint.keys');
   ui.hint.classList.remove('fade');
   clearTimeout(hintTimer);
   hintTimer = setTimeout(() => ui.hint.classList.add('fade'), 7000);
@@ -521,7 +516,7 @@ function beginCountdown() {
   resetCatchBar();
   setHud(true);
   showHint();
-  runCountdown(COUNTDOWN, 800, () => {
+  runCountdown(['3', '2', '1', t('countdown.go')], 800, () => {
     game.play();
     audio.hiss();
     audio.music.play('game');
@@ -541,10 +536,8 @@ function showPauseScreen(reason) {
   faceBackAt = 0;
   ui.warn.classList.add('hidden');
   const face = reason === 'face';
-  $('pause-title').textContent = face ? '🙈 Không thấy khuôn mặt' : '⏸ Tạm dừng';
-  $('pause-text').textContent = face
-    ? 'Hãy nhìn vào camera — game sẽ tự chơi tiếp khi thấy lại khuôn mặt.'
-    : 'Nhấn Esc hoặc nút Tiếp tục để chơi tiếp.';
+  $('pause-title').textContent = t(face ? 'pause.faceTitle' : 'pause.title');
+  $('pause-text').textContent = t(face ? 'pause.faceText' : 'pause.text');
   $('btn-recalibrate').classList.toggle('hidden', settings.control !== 'camera' || !tracker.ready);
   setHud(true);
   show('pause');
@@ -553,7 +546,7 @@ function showPauseScreen(reason) {
 /** Switches the main menu between "new game" and "settings of a paused round". */
 function setMenuFromPause(on) {
   menuFromPause = on;
-  $('btn-start').textContent = on ? '▶ Tiếp tục chơi' : '▶ Bắt đầu';
+  $('btn-start').textContent = t(on ? 'menu.continue' : 'menu.start');
   $('btn-quit-round').classList.toggle('hidden', !on);
   $('menu-paused-note').classList.toggle('hidden', !on);
   $('duration-note').classList.toggle('hidden', !on);
@@ -574,7 +567,7 @@ function backToPause() {
   showPauseScreen('manual');
 }
 
-/** "Tiếp tục chơi" from the settings menu: set up the camera if needed, then resume. */
+/** "Continue" from the settings menu: set up the camera if needed, then resume. */
 async function continueFromSettings() {
   audio.unlock();
   if (settings.control === 'keyboard') {
@@ -584,7 +577,7 @@ async function continueFromSettings() {
   }
   if (!tracker.ready) {
     show('loading');
-    $('loading-text').textContent = 'Đang bật camera…';
+    $('loading-text').textContent = t('loading.camera');
     try {
       await tracker.start((text) => { $('loading-text').textContent = text; });
     } catch (err) {
@@ -603,7 +596,7 @@ function resumeWithCountdown() {
   pauseReason = 'resuming';
   setHud(true);
   showHint();
-  runCountdown(['3', '2', '1', 'TIẾP TỤC!'], 600, () => {
+  runCountdown(['3', '2', '1', t('countdown.resume')], 600, () => {
     pauseReason = null;
     faceLostAt = faceBackAt = 0;
     audio.unpause();
@@ -627,7 +620,7 @@ async function recalibrateFromPause() {
   const button = $('btn-recalibrate');
   pauseReason = 'manual'; // don't auto-resume mid-calibration
   button.disabled = true;
-  button.textContent = 'Nhìn thẳng & giữ yên…';
+  button.textContent = t('pause.holdStill');
   try {
     await tracker.calibrate(1000);
     resumeGame();
@@ -635,7 +628,7 @@ async function recalibrateFromPause() {
     $('pause-text').textContent = err.message;
   } finally {
     button.disabled = false;
-    button.textContent = '🎯 Hiệu chỉnh lại';
+    button.textContent = t('calib.recalibrate');
   }
 }
 
@@ -688,12 +681,12 @@ function syncMenu() {
   $('opt-lock').checked = settings.viewLocked;
   ui.lock.textContent = settings.viewLocked ? '🔒' : '🔓';
   ui.lock.classList.toggle('on', settings.viewLocked);
-  ui.lock.title = settings.viewLocked ? 'Mở khoá góc nhìn (L)' : 'Khoá góc nhìn (L)';
+  ui.lock.title = t(settings.viewLocked ? 'lock.unlock' : 'lock.lock');
   for (const input of document.querySelectorAll('[data-volume]')) input.value = settings[input.dataset.volume];
   for (const label of document.querySelectorAll('[data-volume-label]')) label.textContent = settings[label.dataset.volumeLabel];
   for (const box of document.querySelectorAll('[data-muted]')) box.checked = settings.muted;
-  $('best-duration').textContent = settings.duration;
-  $('best-score').textContent = bestScore(settings.duration);
+  $('best-line').innerHTML = t('menu.best', { minutes: settings.duration, score: bestScore(settings.duration) });
+  markActive('lang-switch', getLang());
   markActive('opt-skin', settings.skin);
   markActive('opt-head', settings.head);
   markActive('opt-theme', settings.theme);
@@ -704,7 +697,7 @@ function syncMenu() {
     label.textContent = key === 'blades' ? `${settings.grass.blades}` : `${settings.grass[key]}%`;
   }
   const head = HEAD_STYLES[settings.head];
-  $('preview-label').textContent = `${SKINS[settings.skin].name} · ${head.emoji} ${head.name}`;
+  $('preview-label').textContent = `${tr(SKINS[settings.skin].name)} · ${head.emoji} ${tr(head.name)}`;
 }
 
 /** Swatch background showing a skin's main, stripe and dark colours. */
@@ -714,7 +707,7 @@ function swatch(skin) {
 }
 
 function renderRecords() {
-  const tabs = [[null, 'Tất cả'], ...DURATIONS.map((d) => [d, `${d} phút`])];
+  const tabs = [[null, t('records.all')], ...DURATIONS.map((d) => [d, t('minutes', { n: d })])];
   $('record-tabs').innerHTML = tabs
     .map(([d, label]) => `<button type="button" data-value="${d ?? ''}" class="${d === recordFilter ? 'active' : ''}">${label}</button>`)
     .join('');
@@ -722,21 +715,41 @@ function renderRecords() {
   const medals = ['🥇', '🥈', '🥉'];
   $('record-body').innerHTML = rows.length
     ? rows.map((r, i) => `<tr class="${i < 3 ? 'top' : ''}">
-        <td>${medals[i] ?? i + 1}</td><td>${Number(r.score)}</td><td>${Number(r.duration)} phút</td>
+        <td>${medals[i] ?? i + 1}</td><td>${Number(r.score)}</td><td>${t('minutes', { n: Number(r.duration) })}</td>
         <td>${Number(r.length) || '-'}</td><td>${formatDate(Number(r.date))}</td></tr>`).join('')
-    : '<tr><td class="empty" colspan="5">Chưa có kỷ lục nào — chơi ngay nhé!</td></tr>';
+    : `<tr><td class="empty" colspan="5">${t('records.empty')}</td></tr>`;
 }
 
 const clickedValue = (e) => e.target.closest('button')?.dataset.value;
 
-$('opt-duration').innerHTML = DURATIONS.map((d) => `<button type="button" data-value="${d}">${d} phút</button>`).join('');
-$('opt-skin').innerHTML = Object.entries(SKINS)
-  .map(([id, skin]) => `<button type="button" data-value="${id}" title="${skin.name}" aria-label="${skin.name}" style="background:${swatch(skin)}"></button>`)
-  .join('');
-$('opt-head').innerHTML = Object.entries(HEAD_STYLES)
-  .map(([id, style]) => `<button type="button" data-value="${id}">${style.emoji} ${style.name}</button>`).join('');
-$('opt-theme').innerHTML = Object.entries(THEMES)
-  .map(([id, theme]) => `<button type="button" data-value="${id}">${theme.emoji} ${theme.name}</button>`).join('');
+/** Option buttons built from data (durations, skins, heads, themes); rebuilt when the language changes. */
+function renderOptions() {
+  $('opt-duration').innerHTML = DURATIONS.map((d) => `<button type="button" data-value="${d}">${t('minutes', { n: d })}</button>`).join('');
+  $('opt-skin').innerHTML = Object.entries(SKINS)
+    .map(([id, skin]) => `<button type="button" data-value="${id}" title="${tr(skin.name)}" aria-label="${tr(skin.name)}" style="background:${swatch(skin)}"></button>`)
+    .join('');
+  $('opt-head').innerHTML = Object.entries(HEAD_STYLES)
+    .map(([id, style]) => `<button type="button" data-value="${id}">${style.emoji} ${tr(style.name)}</button>`).join('');
+  $('opt-theme').innerHTML = Object.entries(THEMES)
+    .map(([id, theme]) => `<button type="button" data-value="${id}">${theme.emoji} ${tr(theme.name)}</button>`).join('');
+}
+
+/** Re-renders all text after the VI / EN switch; a paused round underneath carries on untouched. */
+function applyLanguage() {
+  applyI18n();
+  renderOptions();
+  setMenuFromPause(menuFromPause);
+  syncMenu();
+  renderRecords();
+  for (const badge of ui.catchBar.querySelectorAll('[data-type]')) badge.title = slotName(badge.dataset.type);
+}
+
+$('lang-switch').addEventListener('click', (e) => {
+  const value = clickedValue(e);
+  if (!value || value === getLang()) return;
+  setLang(value);
+  applyLanguage();
+});
 $('menu-tabs').addEventListener('click', (e) => {
   const tab = e.target.closest('button')?.dataset.tab;
   if (tab) setTab(tab);
@@ -797,7 +810,7 @@ for (const box of document.querySelectorAll('[data-muted]')) {
   box.addEventListener('change', () => updateSetting('muted', box.checked));
 }
 $('btn-clear').addEventListener('click', () => {
-  if (!window.confirm('Xoá toàn bộ bảng kỷ lục?')) return;
+  if (!window.confirm(t('records.confirmClear'))) return;
   clearRecords();
   renderRecords();
   syncMenu();
@@ -816,7 +829,7 @@ $('btn-error-menu').addEventListener('click', backToMenu);
 ui.calibButton.addEventListener('click', runCalibration);
 $('btn-invert').addEventListener('click', () => {
   updateSetting('invert', !settings.invert);
-  $('calib-msg').textContent = settings.invert ? 'Đã đảo chiều lái.' : 'Đã trả về chiều lái mặc định.';
+  $('calib-msg').textContent = t(settings.invert ? 'calib.inverted' : 'calib.normal');
 });
 $('btn-calib-back').addEventListener('click', () => {
   if (!menuFromPause) {
@@ -839,12 +852,12 @@ $('btn-menu').addEventListener('click', backToMenu);
 
 function cycleView() {
   if (settings.viewLocked) {
-    if (hudVisible) popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.3 }, '🔒 Góc nhìn đang khoá', '#ffd84a', 'Bấm L để mở khoá');
+    if (hudVisible) popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.3 }, t('lock.isLocked'), '#ffd84a', t('lock.pressL'));
     return;
   }
   const view = VIEWS[(VIEWS.indexOf(settings.view) + 1) % VIEWS.length];
   updateSetting('view', view);
-  if (hudVisible) popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.3 }, `🎥 ${VIEW_NAMES[view]}`, '#ffffff');
+  if (hudVisible) popup({ x: window.innerWidth / 2, y: window.innerHeight * 0.3 }, `🎥 ${viewName(view)}`, '#ffffff');
 }
 
 /** The camera blend to hold while the view is locked, or null when unlocked. */
@@ -855,10 +868,10 @@ function lockedCamera() {
 
 /** Closest named view for a camera blend (for messages). */
 function describeCamera({ chase, first }) {
-  if (first > 0.5) return VIEW_NAMES.first;
-  if (chase > 0.65) return VIEW_NAMES.top;
-  if (chase > 0.2) return VIEW_NAMES.far;
-  return VIEW_NAMES.near;
+  if (first > 0.5) return viewName('first');
+  if (chase > 0.65) return viewName('top');
+  if (chase > 0.2) return viewName('far');
+  return viewName('near');
 }
 
 /**
@@ -879,9 +892,9 @@ function toggleViewLock() {
   if (hudVisible) {
     popup(
       { x: window.innerWidth / 2, y: window.innerHeight * 0.3 },
-      settings.viewLocked ? '🔒 Đã khoá góc nhìn hiện tại' : '🔓 Đã mở khoá góc nhìn',
+      t(settings.viewLocked ? 'lock.locked' : 'lock.unlocked'),
       '#ffd84a',
-      settings.viewLocked ? describeCamera(settings.lockedCamera) : 'Ngẩng đầu / phím C lại đổi được góc',
+      settings.viewLocked ? describeCamera(settings.lockedCamera) : t('lock.unlockedSub'),
     );
   }
 }
@@ -920,6 +933,9 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+renderOptions();
+applyI18n();
+setMenuFromPause(false);
 syncMenu();
 renderRecords();
 show('menu');

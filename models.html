@@ -15,22 +15,26 @@
           <span class="logo">🐍</span>
           <div>
             <h1>Big Snake 3D</h1>
-            <p>Thư viện model 3D</p>
+            <p data-i18n="viewer.subtitle">Thư viện model 3D</p>
           </div>
         </div>
         <nav id="item-list"></nav>
-        <div class="sidebar-foot">Kéo chuột để xoay · Cuộn để phóng to · Chuột phải để di chuyển · ↑/↓ chuyển model</div>
+        <div class="sidebar-foot" data-i18n="viewer.help">Kéo chuột để xoay · Cuộn để phóng to · Chuột phải để di chuyển · ↑/↓ chuyển model</div>
       </aside>
       <main class="stage">
         <div id="viewport"></div>
         <div class="card toolbar">
-          <label class="toggle"><input type="checkbox" id="opt-rotate" checked /><span>Tự xoay</span></label>
-          <label class="toggle"><input type="checkbox" id="opt-anim" checked /><span>Hoạt ảnh</span></label>
+          <div class="lang-switch" id="lang-switch" role="group" data-i18n-aria="lang.label" aria-label="Ngôn ngữ">
+            <button type="button" data-value="vi" lang="vi" title="Tiếng Việt">VI</button>
+            <button type="button" data-value="en" lang="en" title="English">EN</button>
+          </div>
+          <label class="toggle"><input type="checkbox" id="opt-rotate" checked /><span data-i18n="viewer.rotate">Tự xoay</span></label>
+          <label class="toggle"><input type="checkbox" id="opt-anim" checked /><span data-i18n="viewer.anim">Hoạt ảnh</span></label>
           <span id="scene-opts" class="scene-opts hidden">
-            <select id="opt-scene-theme" aria-label="Theme sân"></select>
-            <label class="toggle"><input type="checkbox" id="opt-scene-night" /><span>Ban đêm</span></label>
+            <select id="opt-scene-theme" data-i18n-aria="viewer.theme" aria-label="Theme sân"></select>
+            <label class="toggle"><input type="checkbox" id="opt-scene-night" /><span data-i18n="viewer.night">Ban đêm</span></label>
           </span>
-          <button id="btn-reset" type="button">Đặt lại góc nhìn</button>
+          <button id="btn-reset" type="button" data-i18n="viewer.reset">Đặt lại góc nhìn</button>
         </div>
         <div class="card info">
           <div class="info-head">
