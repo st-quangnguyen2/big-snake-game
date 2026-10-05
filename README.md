@@ -1,133 +1,366 @@
-# Big Snake 3D 🐍
+# 🐍 Big Snake 3D
 
-Game rắn săn mồi 3D chạy trên trình duyệt, **điều khiển bằng chuyển động đầu và cổ qua webcam**.
-Rắn chỉ bò về phía trước (không lùi được); người chơi xoay đầu để rẽ trái/phải, cúi đầu nhẹ để tăng tốc
-và ngẩng đầu lên để nhìn toàn cảnh.
-Con mồi là trái cây và động vật nhỏ. Mỗi ván dài 2–5 phút tuỳ chọn, kỷ lục được lưu trên máy (localStorage).
+A 3D snake game that runs in the browser and is **steered with your head and neck through the webcam**.
+Turn your head to steer, nod to boost, raise your chin to see the whole arena. The snake only ever moves forward,
+hunting fruit and small animals across an arena full of grass, flowers, hills and trees. Rounds last 2–5 minutes and
+high scores are saved locally.
 
-## Chạy game
+![A round of Big Snake 3D](docs/images/gameplay.jpg)
 
-Cần Node.js 18+.
+> The in-game interface is in Vietnamese. In this README, on-screen labels are given in English followed by the
+> original label, e.g. **Start** (`▶ Bắt đầu`), so you can find them in the screenshots.
+
+## Contents
+
+- [Features](#features)
+- [1. Installation](#1-installation)
+- [2. Development](#2-development)
+- [3. Build and deploy](#3-build-and-deploy)
+- [4. How to play](#4-how-to-play)
+- [5. Customization](#5-customization)
+- [6. Sound](#6-sound)
+- [7. 3D model library](#7-3d-model-library)
+- [8. Troubleshooting](#8-troubleshooting)
+- [9. Privacy](#9-privacy)
+
+## Features
+
+- 🎥 **Head control** with [MediaPipe Face Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js),
+  running entirely on the player's device (WebAssembly + GPU), with a calibration screen and a keyboard fallback.
+- 🐍 A snake that **only moves forward**, with a smooth, bending body that follows the terrain; 9 skins and 8 fun head styles.
+- 🍎🐭 7 kinds of fruit and 4 animals that **run away**, combo multipliers, a 100‑point golden apple and an animated catch counter.
+- ⛰️ An arena with hills, mud, rocks, stumps, big trees, berry bushes, and **grass and flowers that part** as the snake passes.
+- 🗺️ 5 arena themes, a **night mode** (moon, stars, fireflies) and 4 camera views including **first person**.
+- 🎵 Synthesized background music and sound effects with separate volume controls.
+- 🏆 2/3/4/5‑minute rounds and a high-score table stored in the browser (localStorage).
+- 🧩 Every 3D model is built in code (no external model files), plus a **model library** page to inspect each one.
+
+---
+
+## 1. Installation
+
+### Requirements
+
+| | |
+| --- | --- |
+| Node.js | **20.19+** or **22.12+** (required by Vite 8), with npm |
+| Browser | A recent Chrome / Edge / Firefox / Safari with WebGL 2 |
+| Webcam | Needed for head control (the game is fully playable with the keyboard without one) |
+| Origin | **HTTPS** or **localhost** — browsers only allow camera access on secure origins |
+
+### Steps
 
 ```bash
+git clone https://github.com/<user>/big-snake.git
+cd big-snake
 npm install
+```
+
+`npm install` runs `scripts/copy-wasm.mjs`, which copies the MediaPipe WebAssembly runtime from `node_modules` into
+`public/mediapipe/wasm` (the folder is recreated each time and is git-ignored).
+
+The face model `face_landmarker.task` (~3.6 MB) is downloaded from Google Cloud Storage the first time a player turns
+on the camera. To self-host it (for example on an internal network), put the file in `public/models/` and build with:
+
+```bash
+VITE_FACE_MODEL_URL=./models/face_landmarker.task npm run build
+```
+
+---
+
+## 2. Development
+
+```bash
 npm run dev
 ```
 
-Mở địa chỉ Vite in ra (mặc định `http://localhost:5173`).
+Open the address Vite prints (`http://localhost:5173` by default, or the port in the `PORT` environment variable):
 
-- `/` — game
-- `/models.html` — thư viện model 3D (xem, xoay, xem hoạt ảnh từng đối tượng)
+- `/` — the game
+- `/models.html` — the 3D model library
 
-## Deploy
+### Scripts
 
-Game là một trang web tĩnh, không cần server. `npm run build` tạo thư mục `dist/` (~23 MB, phần lớn là runtime
-WASM của MediaPipe), có thể đưa lên bất kỳ dịch vụ static hosting nào có **HTTPS** (bắt buộc để dùng camera):
-
-| Dịch vụ | Cài đặt |
+| Command | What it does |
 | --- | --- |
-| Netlify / Vercel / Cloudflare Pages | Build command `npm run build`, output `dist`, Node 18+ |
-| Netlify Drop (không cần Git) | Kéo thả thư mục `dist/` vào https://app.netlify.com/drop |
-| GitHub Pages | Có sẵn workflow `.github/workflows/deploy.yml` (xem bên dưới) |
+| `npm run dev` | Development server with hot reload |
+| `npm run build` | Static production build into `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `postinstall` / `predev` / `prebuild` | Copy the MediaPipe WASM runtime into `public/` automatically |
 
-Lưu ý: kỷ lục lưu trong localStorage nên gắn với từng trình duyệt và từng tên miền.
+### Project layout
 
-### GitHub Pages
+```
+index.html, src/main.js     UI: menu (Play / Customize / Settings), calibration, HUD, pause, game over, records
+src/game.js                 Three.js scene, game rules, cameras (near / far / top / first person), minimap
+src/snake.js                Snake: trail-following movement, collisions, growing / shrinking, terrain following
+src/prey.js                 Bobbing fruit and small-animal AI (wander, flee, avoid walls and obstacles)
+src/world.js                Arena: hills, obstacles, mud, big trees, berry bushes, interactive grass and flowers, themes, night
+src/headTracker.js          Webcam + MediaPipe Face Landmarker → filtered head angles
+src/input.js                Keyboard, and mapping head angles → steer / boost / look up
+src/storage.js              Settings and high scores (localStorage)
+src/audio.js, src/music.js  Sound effects, volume buses, background music (a small step sequencer)
+src/themes.js               Arena theme palettes and night lighting
+src/preview.js              Live snake preview in the menu
+src/particles.js            Particle effects
+src/models/                 Procedural 3D models: snake, fruit, animals, flowers, trees, rocks, fence…
+src/viewer/                 Model library page
+scripts/copy-wasm.mjs       Copies the MediaPipe WASM runtime into public/
+.github/workflows/          GitHub Pages deploy workflow
+```
 
-1. Tạo repository trên GitHub rồi đẩy code lên nhánh `main`:
-   `git remote add origin https://github.com/<user>/<repo>.git` và `git push -u origin main`.
-2. Vào **Settings → Pages → Build and deployment → Source** chọn **GitHub Actions** (chỉ làm một lần).
-3. Mỗi lần push lên `main`, workflow tự `npm ci` → `npm run build` → đăng `dist/`.
-   Theo dõi ở tab **Actions**; game chạy tại `https://<user>.github.io/<repo>/`
-   và thư viện model tại `https://<user>.github.io/<repo>/models.html`.
+### Technical notes
 
-Vite dùng `base: './'` (đường dẫn tương đối) nên chạy đúng trong thư mục con `/<repo>/` mà không cần cấu hình thêm.
+- **Head pose**: the rotation part of MediaPipe's `facialTransformationMatrixes` is taken relative to the "looking
+  straight" pose captured during calibration, converted to yaw / pitch / roll, then smoothed with a One Euro filter
+  (steady when still, responsive when moving fast).
+- **Interactive grass and flowers**: every frame the CPU writes a 128×128 "push field" from the snake's body, the
+  animals and the fruit. The vertex shader samples it once per blade and bends the blade around its root, keeping
+  its length. The grass is split into 4×4 chunks so the camera only draws what it can see.
+- **Snake body**: a tube rebuilt every frame from the snake's trail; the skin patterns are drawn in the fragment shader.
+- In development, `window.__game` (game page) and `window.__viewer` (model library) are exposed for poking around in the console.
 
-## Model nhận diện đầu: MediaPipe Face Landmarker
+---
 
-Game dùng [MediaPipe Face Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js)
-(`@mediapipe/tasks-vision`) vì:
+## 3. Build and deploy
 
-- Chạy hoàn toàn trong trình duyệt (WebAssembly + GPU), ~10–15 ms/khung hình, không cần server.
-- Trả về **ma trận biến đổi khuôn mặt 3D** (`facialTransformationMatrixes`), từ đó tính trực tiếp
-  góc xoay đầu (yaw), cúi/ngẩng (pitch) và nghiêng (roll) — chính xác hơn tự ước lượng từ landmark 2D.
-- Model nhỏ (~3.6 MB, float16), tối ưu cho camera selfie.
+```bash
+npm run build
+npm run preview
+```
 
-Xử lý góc đầu (`src/headTracker.js`):
+`dist/` (~23 MB, mostly the WASM runtime) is a static site that works on any static host with **HTTPS**.
+Vite uses `base: './'` (relative paths), so it works both at a domain root and in a sub-folder.
 
-1. Lấy phần quay (quaternion) của ma trận biến đổi.
-2. **Hiệu chỉnh**: người chơi nhìn thẳng 1 giây, lấy trung bình làm tư thế "thẳng"; mọi góc tính tương đối so với tư thế này.
-3. Lọc nhiễu bằng **One Euro filter** (mượt khi giữ yên, nhạy khi chuyển động nhanh).
-4. `src/input.js` đổi góc thành lệnh lái: vùng chết 3.5°, góc tối đa theo độ nhạy (12°–34°), cúi đầu > 12° để tăng tốc,
-   ngẩng đầu 6°–18° để nâng camera dần lên góc nhìn toàn cảnh.
+### GitHub Pages (workflow included)
 
-Mọi xử lý hình ảnh diễn ra trên máy người chơi; không có hình ảnh nào được gửi đi.
-WASM runtime được copy từ `node_modules` sang `public/mediapipe/wasm` khi `npm install`/`dev`/`build`.
-File model được tải từ Google Cloud Storage ở lần chạy đầu; muốn tự host, đặt file vào `public/models/` và chạy với
-`VITE_FACE_MODEL_URL=./models/face_landmarker.task`.
+`.github/workflows/deploy.yml` runs `npm ci` → `npm run build` → publishes `dist/` on every push to `main`.
 
-## Luật chơi
+1. Create an empty GitHub repository and push the code:
 
-| Con mồi | Điểm | Dài thêm |
+   ```bash
+   git remote add origin https://github.com/<user>/big-snake.git
+   git push -u origin main
+   ```
+
+2. Go to **Settings → Pages → Build and deployment → Source** and select **GitHub Actions** (one-time setup).
+3. Watch the **Actions** tab. When it finishes, the game is live at `https://<user>.github.io/big-snake/`
+   and the model library at `https://<user>.github.io/big-snake/models.html`.
+
+After that, every push to `main` redeploys the site; you can also re-run it with **Run workflow** (workflow_dispatch).
+
+### Other hosts
+
+| Host | Settings |
+| --- | --- |
+| Netlify / Vercel / Cloudflare Pages | Build command `npm run build`, output directory `dist`, Node 20.19+ / 22.12+ |
+| Netlify Drop (no Git needed) | Build locally, then drag the `dist/` folder onto https://app.netlify.com/drop |
+
+> High scores and settings live in localStorage, so they are tied to each browser and each domain —
+> moving to a new domain starts a fresh high-score table.
+
+---
+
+## 4. How to play
+
+### 4.1. Main menu
+
+![Main menu](docs/images/menu.jpg)
+
+On the **Play** tab (`🎮 Chơi`), choose the **round length** (2 / 3 / 4 / 5 minutes) and the **control method**
+— Camera (`📷 Camera`) or Keyboard (`⌨️ Bàn phím`) — then press **Start** (`▶ Bắt đầu`) or Enter.
+On the right are the **high-score table** (filtered by round length) and a short summary of the rules.
+The other tabs are **Customize** (`🎨 Tuỳ biến`, see [section 5](#5-customization)) and **Settings** (`⚙️ Cài đặt`:
+camera view, sound, head-control options).
+
+### 4.2. Camera calibration (head control)
+
+1. Allow camera access when the browser asks.
+2. Sit 50–80 cm from the screen with your face centred in the frame and well lit.
+3. Look straight at the screen, press **Calibrate** (`🎯 Hiệu chỉnh`) and hold still for about a second.
+4. Turn your head: the steering gauge should move **the same way** as your head. If it is reversed, press
+   **Invert** (`⇄ Đảo chiều`). Nodding lights up the **BOOST** chip (`⚡ TĂNG TỐC`); raising your chin lights up the
+   **LOOK** chip (`👀 NHÌN XA`).
+5. Press **Play** (`Vào game ▶`) — a 3‑2‑1 countdown starts the round.
+
+### 4.3. Controls
+
+| Head (camera) | Keyboard | Action |
 | --- | --- | --- |
-| 🍎 Táo / 🍊 Cam / 🍌 Chuối / 🍓 Dâu | 10–15 | +1 |
-| 🍇 Nho | 20 | +2 |
-| 🍉 Dưa hấu | 30 | +3 |
-| ⭐ Táo vàng (xuất hiện ngẫu nhiên, 10 giây) | 100 | +2 |
-| 🐥 Gà con / 🐭 Chuột / 🐸 Ếch / 🐰 Thỏ (bỏ chạy khi rắn tới gần) | 35–70 | +2–3 |
+| Turn head left / right (or tilt toward a shoulder — set in Settings) | `←` `→` / `A` `D` | Steer left / right |
+| Nod the chin down slightly (> 12°) | `Space` / `Shift` / `↑` / `W` | Boost ×1.65 |
+| Raise the chin (6°–18°) | Hold `↓` / `S` | Lift the camera to an overview |
+| — | `C` | Cycle views: Near → Far → Top → First person |
+| — | `L` | Lock / unlock the current view |
+| — | `M` | Mute / unmute |
+| — | `Esc` / `P` | Pause / resume |
 
-- Ăn liên tiếp trong 2.6 giây để tăng combo: ×1.5, ×2 … tối đa ×3.
-- Bộ đếm dưới đồng hồ ghi số chuột / gà con / ếch / thỏ / trái cây đã ăn; khi bắt được thú, biểu tượng của nó
-  bay vào ô đếm (kèm pháo sáng và tiếng "ting"); màn kết thúc ván có bảng tổng kết theo từng loại.
-- Đâm vào hàng rào hoặc cắn phải thân mình: −10 điểm, rắn ngắn lại 20%, mất combo, được miễn va chạm 2 giây.
-  Ván **luôn kéo dài đủ thời gian đã chọn**.
-- Thanh tăng tốc cạn sẽ phải hồi lại 30% mới dùng tiếp.
-- Địa hình: lên dốc chậm lại, xuống dốc nhanh hơn; vũng bùn làm chậm 40%; tảng đá, gốc cây và thân 4 cây to
-  là vật cản (tán cây tự mờ khi rắn ở bên dưới); cỏ cao rẽ ra quanh rắn, thú và trái cây rồi dựng lại sau đuôi;
-  bụi quả mọng tách ra khi rắn bò xuyên qua.
-- Mất khuôn mặt khỏi camera quá 1.5 giây → game tự tạm dừng, tự chơi tiếp khi thấy lại.
-- Khi tạm dừng có nút **⚙️ Cài đặt** mở lại toàn bộ menu cài đặt mà không mất ván; bấm "Tiếp tục chơi" để đếm
-  ngược 3‑2‑1 rồi chơi tiếp (thời gian chơi mới chỉ áp dụng từ ván sau).
+Head angles under 3.5° are ignored so small jitters never steer the snake. **Sensitivity** (Settings, 1–10) sets how
+far you must turn for a full-strength turn (34° down to about 12°). If the camera loses your face for more than
+1.5 seconds the game **pauses automatically** and resumes when it sees you again.
 
-Điều khiển dự phòng bằng bàn phím: `←/→` hoặc `A/D` để lái, `Space` để tăng tốc, giữ `↓`/`S` để nhìn xa,
-`C` đổi góc nhìn (Gần / Xa / Trên cao / Thứ nhất), `L` khoá đúng khung hình camera đang hiển thị
-(kể cả khi đang ngẩng đầu nhìn toàn cảnh; sau đó ngẩng đầu / `↓` / `C` không đổi góc nữa — cũng bật được bằng nút 🔒
-trên màn hình hoặc trong menu), `M` tắt/bật tiếng, `Esc`/`P` để tạm dừng.
+### 4.4. Rules
 
-## Tuỳ biến (menu → 🎨 Tuỳ biến)
+The snake always moves forward and can never reverse. The more it eats, the longer and faster it gets
+(5.4 → 7.6 units per second).
 
-- **Rắn**: 9 màu da với hoa văn riêng (sọc, kim cương, chấm bi, vằn hổ, cầu vồng) và 8 kiểu đầu
-  (Cổ điển, Dễ thương, Ngầu, Nhà vua, Tiệc tùng, Rồng, Nơ xinh, Mèo con), có khung xem trước 3D.
-- **Sân chơi**: Đồng cỏ, Mùa thu, Mùa đông, Sa mạc, Xứ kẹo (`src/themes.js` — mỗi theme là bảng đổi màu).
-- **Sáng / Tối / Theo máy**: chế độ tối đổi giao diện sang tông tối và sân thành ban đêm (trăng, sao, đom đóm).
-- **Cỏ**: số phiến mỗi bụi (16–32), độ cao, độ rậm, kích thước cụm và độ đa dạng (đa dạng cao → cỏ mọc thành
-  mảng to nhỏ ngẫu nhiên). Phiến cỏ và hoa uốn cong quanh gốc khi bị đè (giữ nguyên chiều dài), mỗi phiến
-  cứng/lệch hướng khác nhau. Lực đẩy được tính sẵn thành một "bản đồ lực" 128×128 mỗi khung hình nên cỏ dày
-  vẫn nhẹ (~2 ms/khung hình ở mức tối đa trên máy thử).
-- **Hoa**: 9 loại (`src/models/flowers.js`) mọc thành khóm, mỗi bông cao thấp và nghiêng khác nhau.
+| Prey | Points | Growth | Notes |
+| --- | --- | --- | --- |
+| 🍎 Apple · 🍊 Orange | 10 · 12 | +1 | |
+| 🍌 Banana · 🍓 Strawberry | 15 | +1 | |
+| 🍇 Grapes | 20 | +2 | |
+| 🍉 Watermelon | 30 | +3 | Rare |
+| ⭐ Golden apple | 100 | +2 | Appears roughly every 20–40 s and disappears after 10 s |
+| 🐥 Chick | 35 | +2 | Slow, flaps around in a panic |
+| 🐭 Mouse | 40 | +2 | Fast, changes direction often |
+| 🐸 Frog | 50 | +2 | Moves in hops |
+| 🐰 Rabbit | 70 | +3 | The fastest and most alert — boost or corner it |
 
-## Âm thanh
+- **Combo**: catch prey within 2.6 seconds of each other to multiply points ×1.5, ×2, ×2.5, up to **×3**.
+- **Boost**: once the ⚡ bar is empty it must recharge to 30% before it can be used again.
+- **Terrain**: uphill is slower, downhill is faster; **mud** slows the snake by 40%; the snake can push straight
+  through **berry bushes** and tall grass.
+- **Crashing** into the fence, a boulder, a stump, a big tree trunk or your own body costs **−10 points**, makes the
+  snake **20% shorter**, resets the combo and gives about 2 seconds of invulnerability. A round **always lasts the
+  full time** you chose; the music speeds up for the last 20 seconds.
 
-Toàn bộ âm thanh được tổng hợp bằng Web Audio (`src/audio.js`, `src/music.js`), không dùng file ngoài:
-nhạc nền riêng cho menu và khi chơi (tăng nhịp ở 20 giây cuối), tiếng ăn mồi theo combo, tiếng kêu riêng của
-từng con vật khi bỏ chạy, tăng tốc, lội bùn, va chạm, táo vàng xuất hiện, đếm ngược… Âm lượng nhạc nền và
-hiệu ứng chỉnh riêng ở menu hoặc màn tạm dừng, được lưu lại cùng các cài đặt khác.
+### 4.5. In-game HUD
 
-## Cấu trúc mã
+![Catching a rabbit](docs/images/catch.jpg)
 
-```
-index.html, src/main.js     Giao diện: menu, hiệu chỉnh, HUD, tạm dừng, kết thúc, bảng kỷ lục
-src/game.js                 Scene Three.js, luật chơi, camera bám đuôi, bản đồ nhỏ
-src/snake.js                Rắn: di chuyển theo vệt, va chạm, lớn lên / ngắn lại, hoạt ảnh
-src/prey.js                 Trái cây lơ lửng và AI động vật (đi lang thang, bỏ chạy, né tường)
-src/world.js                Đấu trường đồi núi, vật cản, bùn, cây to, bụi quả, cỏ tương tác, theme và đêm
-src/themes.js               Bảng màu các theme sân và ánh sáng ban đêm
-src/preview.js              Khung xem trước rắn 3D trong menu
-src/headTracker.js          Webcam + MediaPipe Face Landmarker → góc đầu đã lọc
-src/input.js                Bàn phím và ánh xạ góc đầu → lệnh lái
-src/storage.js              Cài đặt và kỷ lục (localStorage, top 20 mỗi mức thời gian)
-src/audio.js, music.js      Hiệu ứng âm thanh, kênh âm lượng và nhạc nền (bộ sequencer nhỏ)
-src/particles.js            Hiệu ứng hạt
-src/models/                 Toàn bộ model 3D dựng bằng code (không dùng file ngoài)
-src/viewer/                 Trang thư viện model
-```
+- **Top left**: score, combo, length and the best score for the current round length.
+- **Top centre**: the countdown timer and the **catch counter** 🐭 🐥 🐸 🐰 🍎. When you catch an animal, a popup like
+  "🐰 +70 · Bắt được Thỏ!" (*Caught a rabbit!*) appears, the animal's icon flies into its slot, and the slot bounces
+  with a "ting".
+- **Top right**: the minimap (rotates with the snake and shows trees, bushes, mud, rocks and prey), the 🔒 view-lock
+  button and the ⏸ pause button.
+- **Bottom left**: the camera preview (head control only) and the ⚡ boost bar.
+
+### 4.6. Camera views
+
+| First person | Top |
+| --- | --- |
+| ![First-person view](docs/images/view-first.jpg) | ![Top view](docs/images/view-top.jpg) |
+
+There are four views: **Near**, **Far**, **Top** and **First person** (camera just above the snake's head). Pick the
+default in Settings or press `C` during play. Raise your chin to temporarily lift the camera for an overview.
+**View lock** (`L` or the 🔒 button) freezes exactly the framing you currently see — even mid-overview — until you
+unlock it.
+
+### 4.7. Pausing and in-game settings
+
+| Pause | Settings while paused |
+| --- | --- |
+| ![Pause screen](docs/images/pause.jpg) | ![Settings while paused](docs/images/settings.jpg) |
+
+The pause screen has quick volume sliders, **Recalibrate** (`🎯 Hiệu chỉnh lại`), **Settings** (`⚙️ Cài đặt`) and
+**Quit** (`Thoát`). Settings opens the full menu without losing the round; press **Continue** (`▶ Tiếp tục chơi`) to get
+a 3‑2‑1 countdown and carry on exactly where you left off (a new round length only applies from the next round).
+
+### 4.8. Game over and high scores
+
+![Game over screen](docs/images/gameover.jpg)
+
+When time runs out you see your score, your rank for that round length (🏆 `KỶ LỤC MỚI!` — *new record!* — if you
+beat it), the final length, how many fruits, animals and golden apples you ate, and a breakdown per prey type.
+The top 20 scores are kept for each round length; **Clear records** (`Xoá kỷ lục`) in the menu resets them.
+
+---
+
+## 5. Customization
+
+![Customize tab with the live preview](docs/images/customize.jpg)
+
+The **Customize** tab (`🎨 Tuỳ biến`) has a live 3D preview of your snake. Every choice is saved and can also be
+changed while the game is paused.
+
+### Snake skins and head styles
+
+| 9 skins | 8 head styles |
+| --- | --- |
+| ![Snake skins](docs/images/viewer-skins.jpg) | ![Head styles](docs/images/viewer-heads.jpg) |
+
+- **Skins**: Green (bands), Ocean (diamonds), Fire and Tiger (stripes), Grape, Lemon and Galaxy (spots),
+  Candy (white bands), Rainbow.
+- **Head styles**: Classic, Cute, Cool (sunglasses), King (crown), Party (party hat), Dragon (horns), Bow, Kitty.
+
+### Arena themes
+
+| Autumn | Winter |
+| --- | --- |
+| ![Autumn](docs/images/theme-autumn.jpg) | ![Winter](docs/images/theme-winter.jpg) |
+| **Desert** | **Candy land** |
+| ![Desert](docs/images/theme-desert.jpg) | ![Candy land](docs/images/theme-candy.jpg) |
+
+Together with **Meadow** (the image at the top) there are 5 themes. Each theme is a recolour table in `src/themes.js`.
+
+### Light / dark mode
+
+![Night mode](docs/images/night.jpg)
+
+**Light / Dark / System** (`☀️ Sáng / 🌙 Tối / 🖥️ Theo máy`): dark mode switches the UI to dark colours and turns the
+arena into night with a moon, stars and fireflies. It works with every theme.
+
+### Grass and flowers
+
+| Slider | Range | Default |
+| --- | --- | --- |
+| 🌱 Blades per clump (`Số phiến`) | 16–32 | 28 |
+| 📏 Height (`Độ cao`) | 50–200% | 100% |
+| 🌾 Density (`Độ rậm`, number of clumps) | 20–250% (100% = 2,600 clumps) | 100% |
+| 🌿 Clump size (`Cụm cỏ`) | 50–200% | 100% |
+| 🎲 Variety (`Đa dạng`) | 0–100% — higher means grass grows in random patches of different sizes | 50% |
+
+There are 9 kinds of flowers (cosmos, daisy, tulip, sunflower, lavender, dandelion, bluebell, rose, buttercup). They
+grow in clumps at random heights and lean aside when the snake passes. On slower machines, lower the density and the
+blades per clump.
+
+---
+
+## 6. Sound
+
+All sound is synthesized with the Web Audio API (`src/audio.js`, `src/music.js`); there are no audio files:
+
+- **Music**: a gentle bell tune in the menu and an upbeat chiptune during play (faster in the last 20 seconds, ducked while paused).
+- **Effects**: eating (pitch rises with the combo), a distinct cry for each animal when it flees, boost, mud splashes,
+  rustling bushes, crashes, the golden apple appearing, the countdown, a "ting" when the catch counter goes up, and an
+  end-of-round jingle.
+- **Volume**: 🎵 Music and 🔔 Effects are set separately (Settings menu or pause screen); `M` mutes everything.
+
+---
+
+## 7. 3D model library
+
+![Sample scene in the model library](docs/images/viewer-diorama.jpg)
+
+`models.html` lists every model in the game, with orbit / zoom controls and animations:
+
+- **Snake**: the player snake, a head close-up, all head styles, all skins.
+- **Fruit** and **small animals** (with points, flee speed and more).
+- **Environment**: pine and round trees, big trees (oak, cherry blossom, apple), bushes and berry bushes, rocks and
+  boulders, stumps, mud, every flower, grass clumps (16 / 24 / 32 blades side by side), the wooden fence.
+- **Overview**: every prey side by side at true scale, and a **sample scene** — a corner of the real game arena with a
+  snake weaving through the grass; pick the theme and toggle night mode from the toolbar.
+
+![All prey side by side](docs/images/viewer-lineup.jpg)
+
+---
+
+## 8. Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| "Camera unavailable" (`Chưa dùng được camera`) | Click the camera icon in the address bar to allow access, then **Retry** (`Thử lại`). The page must be served over `https://` or from `localhost`. |
+| The camera is in use by another app | Close that app (Zoom, Meet…) and retry. |
+| The snake turns the opposite way | Calibration screen → **Invert** (`⇄ Đảo chiều`), or Settings → head control → **Invert steering** (`Đảo chiều lái`). |
+| Steering feels too weak / too twitchy | Recalibrate while sitting straight; adjust **Sensitivity** in Settings. |
+| The game keeps pausing itself | Your face is leaving the frame or the room is too dark — centre yourself and add light. |
+| Low frame rate | Lower grass **Density** and **Blades per clump**; prefer the Near view over Top. |
+| No sound | Click the page once (browsers block audio until the first interaction); check `M` and the volume sliders. |
+| Grass / flowers pop in after loading or changing theme | The browser is compiling shaders; wait about a second. |
+
+## 9. Privacy
+
+Camera frames are processed **only on the player's device** (MediaPipe runs in the browser); no images or data are
+sent anywhere. The only network downloads are the face-detection model and the web font. Settings and high scores
+stay in the browser's localStorage.

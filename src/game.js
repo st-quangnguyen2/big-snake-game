@@ -249,7 +249,8 @@ export class Game {
   // ------------------------------------------------------------ loop
 
   frame(now) {
-    const dt = Math.min(0.05, (now - this.last) / 1000);
+    // Clamp to [0, 50 ms]: never step backwards, and survive long stalls without tunnelling.
+    const dt = Math.max(0, Math.min(0.05, (now - this.last) / 1000));
     this.last = now;
     const input = this.hooks.onFrame?.(now) ?? { turn: 0, boost: false };
     const animating = this.mode !== 'paused';
