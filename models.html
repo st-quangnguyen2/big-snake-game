@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Big Snake 3D – Thư viện model</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="logo">🐍</span>
+          <div>
+            <h1>Big Snake 3D</h1>
+            <p>Thư viện model 3D</p>
+          </div>
+        </div>
+        <nav id="item-list"></nav>
+        <div class="sidebar-foot">Kéo chuột để xoay · Cuộn để phóng to · Chuột phải để di chuyển · ↑/↓ chuyển model</div>
+      </aside>
+      <main class="stage">
+        <div id="viewport"></div>
+        <div class="card toolbar">
+          <label class="toggle"><input type="checkbox" id="opt-rotate" checked /><span>Tự xoay</span></label>
+          <label class="toggle"><input type="checkbox" id="opt-anim" checked /><span>Hoạt ảnh</span></label>
+          <span id="scene-opts" class="scene-opts hidden">
+            <select id="opt-scene-theme" aria-label="Theme sân"></select>
+            <label class="toggle"><input type="checkbox" id="opt-scene-night" /><span>Ban đêm</span></label>
+          </span>
+          <button id="btn-reset" type="button">Đặt lại góc nhìn</button>
+        </div>
+        <div class="card info">
+          <div class="info-head">
+            <span id="info-emoji"></span>
+            <div>
+              <div id="info-cat"></div>
+              <h2 id="info-name"></h2>
+            </div>
+          </div>
+          <p id="info-desc"></p>
+          <dl id="info-stats"></dl>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/viewer/viewer.js"></script>
+  </body>
+</html>

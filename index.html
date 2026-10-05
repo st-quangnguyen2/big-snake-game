@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Big Snake 3D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="scene"></div>
+    <div id="flash"></div>
+
+    <div id="hud" class="hidden">
+      <div class="hud-panel hud-stats">
+        <div class="hud-label">ĐIỂM</div>
+        <div id="hud-score" class="hud-score">0</div>
+        <div id="hud-combo" class="hud-combo"></div>
+        <div class="hud-row">🐍 Dài <b id="hud-length">8</b></div>
+        <div class="hud-row">🏆 Kỷ lục <b id="hud-best">0</b></div>
+      </div>
+      <div id="hud-time" class="hud-time">3:00</div>
+      <div id="hud-catch" class="hud-catch" aria-label="Đã bắt được"></div>
+      <div class="hud-right">
+        <canvas id="minimap" width="160" height="160"></canvas>
+        <div class="hud-btns">
+          <button id="btn-lock" class="hud-btn" type="button" title="Khoá góc nhìn (L)">🔓</button>
+          <button id="btn-pause" class="hud-btn" type="button" title="Tạm dừng (Esc)">⏸</button>
+        </div>
+      </div>
+      <div class="hud-bottom-left">
+        <div id="cam-box" class="cam-box">
+          <canvas id="cam-canvas" width="200" height="150"></canvas>
+          <div class="gauge"><div id="cam-knob" class="knob"></div></div>
+        </div>
+        <div id="hud-boost-box" class="hud-panel boost">
+          <div class="boost-label">⚡ TĂNG TỐC</div>
+          <div class="boost-bar"><div id="hud-boost" class="boost-fill"></div></div>
+        </div>
+      </div>
+      <div id="hud-hint" class="hud-hint"></div>
+      <div id="hud-warn" class="hud-warn hidden">⚠️ Không thấy khuôn mặt</div>
+      <div id="popups"></div>
+    </div>
+
+    <section id="screen-menu" class="screen">
+      <div class="card menu">
+        <div class="menu-main">
+          <div class="title">
+            <span class="title-icon">🐍</span>
+            <div>
+              <h1>Big Snake 3D</h1>
+              <p>Lắc đầu để điều khiển rắn săn mồi!</p>
+            </div>
+          </div>
+          <p id="menu-paused-note" class="paused-note hidden">⏸ Ván đang tạm dừng — chỉnh xong bấm <b>Tiếp tục chơi</b> (Esc: quay lại)</p>
+
+          <div class="menu-tabs" id="menu-tabs" role="tablist">
+            <button type="button" role="tab" data-tab="play" class="active">🎮 Chơi</button>
+            <button type="button" role="tab" data-tab="custom">🎨 Tuỳ biến</button>
+            <button type="button" role="tab" data-tab="settings">⚙️ Cài đặt</button>
+          </div>
+
+          <div class="tab-panel" data-panel="play">
+            <h3>⏱️ Thời gian chơi <small id="duration-note" class="hidden">(áp dụng từ ván sau)</small></h3>
+            <div class="seg" id="opt-duration"></div>
+
+            <h3>🎮 Điều khiển</h3>
+            <div class="seg" id="opt-control">
+              <button type="button" data-value="camera">📷 Camera (đầu &amp; cổ)</button>
+              <button type="button" data-value="keyboard">⌨️ Bàn phím</button>
+            </div>
+          </div>
+
+          <div class="tab-panel hidden" data-panel="custom">
+            <div class="preview-box">
+              <canvas id="snake-preview"></canvas>
+              <div id="preview-label" class="preview-label"></div>
+            </div>
+
+            <h3>🐍 Màu rắn</h3>
+            <div class="swatches" id="opt-skin"></div>
+
+            <h3>😃 Kiểu đầu</h3>
+            <div class="seg wrap" id="opt-head"></div>
+
+            <h3>🗺️ Sân chơi</h3>
+            <div class="seg wrap" id="opt-theme"></div>
+
+            <h3>🌗 Chế độ sáng / tối</h3>
+            <div class="seg" id="opt-appearance">
+              <button type="button" data-value="light">☀️ Sáng</button>
+              <button type="button" data-value="dark">🌙 Tối</button>
+              <button type="button" data-value="auto">🖥️ Theo máy</button>
+            </div>
+
+            <h3>🌱 Cỏ trong sân <button id="btn-grass-reset" class="btn ghost small inline" type="button">Mặc định</button></h3>
+            <div class="volumes">
+              <label class="volume"><span>📏 Độ cao</span><input type="range" min="50" max="200" step="10" data-grass="height" /><b data-grass-label="height"></b></label>
+              <label class="volume"><span>🌾 Độ rậm</span><input type="range" min="20" max="250" step="10" data-grass="density" /><b data-grass-label="density"></b></label>
+              <label class="volume"><span>🌱 Số phiến</span><input type="range" min="16" max="32" step="1" data-grass="blades" /><b data-grass-label="blades"></b></label>
+              <label class="volume"><span>🌿 Cụm cỏ</span><input type="range" min="50" max="200" step="10" data-grass="size" /><b data-grass-label="size"></b></label>
+              <label class="volume"><span>🎲 Đa dạng</span><input type="range" min="0" max="100" step="10" data-grass="variety" /><b data-grass-label="variety"></b></label>
+              <p class="hint">Đa dạng cao: cỏ mọc thành từng mảng to nhỏ khác nhau khắp sân.</p>
+            </div>
+          </div>
+
+          <div class="tab-panel hidden" data-panel="settings">
+            <h3>🎥 Góc nhìn <small>(đổi nhanh bằng phím C)</small></h3>
+            <div class="seg" id="opt-view">
+              <button type="button" data-value="near">🐍 Gần</button>
+              <button type="button" data-value="far">🔭 Xa</button>
+              <button type="button" data-value="top">🛰️ Trên cao</button>
+              <button type="button" data-value="first">👁️ Thứ nhất</button>
+            </div>
+            <label class="check"><input id="opt-lock" type="checkbox" /> 🔒 Khoá góc nhìn khi chơi — ngẩng đầu hay phím C không đổi góc (phím L)</label>
+
+            <h3>🔊 Âm thanh</h3>
+            <div class="volumes">
+              <label class="volume"><span>🎵 Nhạc nền</span><input type="range" min="0" max="100" step="5" data-volume="musicVolume" /><b data-volume-label="musicVolume"></b></label>
+              <label class="volume"><span>🔔 Hiệu ứng</span><input type="range" min="0" max="100" step="5" data-volume="sfxVolume" /><b data-volume-label="sfxVolume"></b></label>
+              <label class="check"><input type="checkbox" data-muted /> Tắt tiếng (phím M)</label>
+            </div>
+
+            <h3>🎯 Điều khiển bằng đầu</h3>
+            <div class="advanced">
+              <label class="field">
+                <span>Cách lái</span>
+                <select id="opt-steer">
+                  <option value="yaw">Xoay đầu trái / phải</option>
+                  <option value="roll">Nghiêng đầu về vai</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Độ nhạy: <b id="opt-sens-value"></b></span>
+                <input id="opt-sens" type="range" min="1" max="10" step="1" />
+              </label>
+              <label class="check"><input id="opt-nod" type="checkbox" /> Cúi đầu nhẹ để tăng tốc</label>
+              <label class="check"><input id="opt-lookup" type="checkbox" /> Ngẩng đầu lên để nhìn toàn cảnh</label>
+              <label class="check"><input id="opt-invert" type="checkbox" /> Đảo chiều lái</label>
+            </div>
+          </div>
+
+          <button id="btn-start" class="btn primary big" type="button">▶ Bắt đầu</button>
+          <button id="btn-quit-round" class="btn ghost quit-round hidden" type="button">Thoát ván, về menu chính</button>
+          <p class="best-line">Kỷ lục <span id="best-duration"></span> phút: <b id="best-score">0</b></p>
+        </div>
+
+        <div class="menu-side">
+          <h3>🏆 Bảng kỷ lục</h3>
+          <div class="tabs" id="record-tabs"></div>
+          <table class="records">
+            <thead><tr><th>#</th><th>Điểm</th><th>Thời gian</th><th>Dài</th><th>Ngày</th></tr></thead>
+            <tbody id="record-body"></tbody>
+          </table>
+          <button id="btn-clear" class="btn ghost small" type="button">Xoá kỷ lục</button>
+
+          <div class="howto">
+            <h3>📖 Cách chơi</h3>
+            <ul>
+              <li>🍎 Trái cây: 10–30 điểm</li>
+              <li>🐭 Thú nhỏ: 35–70 điểm — chúng sẽ bỏ chạy!</li>
+              <li>⭐ Táo vàng: 100 điểm, chỉ xuất hiện 10 giây</li>
+              <li>🔥 Ăn liên tiếp để nhân combo, tối đa ×3</li>
+              <li>⛰️ Lên dốc chậm lại, xuống dốc nhanh hơn · 🟤 Vũng bùn làm rắn chậm</li>
+              <li>🌿 Bò xuyên qua bụi quả và cỏ cao — chúng sẽ rẽ ra</li>
+              <li>💥 Đâm vào hàng rào, đá, gốc cây, thân cây to hay thân mình: mất 10 điểm và rắn ngắn lại</li>
+            </ul>
+            <a class="link" href="./models.html">Xem thư viện model 3D →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-loading" class="screen hidden">
+      <div class="card small-card">
+        <div class="spinner"></div>
+        <p id="loading-text">Đang khởi động…</p>
+      </div>
+    </section>
+
+    <section id="screen-error" class="screen hidden">
+      <div class="card small-card">
+        <h2>😕 Chưa dùng được camera</h2>
+        <p id="error-text"></p>
+        <div class="btns">
+          <button id="btn-error-keyboard" class="btn primary" type="button">⌨️ Chơi bằng bàn phím</button>
+          <button id="btn-error-retry" class="btn" type="button">Thử lại</button>
+          <button id="btn-error-menu" class="btn ghost" type="button">Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-calibrate" class="screen hidden">
+      <div class="card calib">
+        <h2>🎯 Hiệu chỉnh camera</h2>
+        <div class="calib-body">
+          <div class="calib-view">
+            <canvas id="calib-canvas" width="480" height="360"></canvas>
+            <div id="calib-face" class="face-badge">Đang tìm khuôn mặt…</div>
+          </div>
+          <div class="calib-side">
+            <ol>
+              <li>Ngồi cách màn hình 50–80 cm, mặt ở giữa khung hình và đủ sáng.</li>
+              <li>Nhìn thẳng vào màn hình, bấm <b>Hiệu chỉnh</b> và giữ yên 1 giây.</li>
+              <li>Thử <b id="calib-steer-hint">xoay đầu sang trái / phải</b>: thanh bên dưới phải chạy cùng chiều.</li>
+              <li>Cúi đầu nhẹ → <b>tăng tốc</b>; ngẩng đầu lên → <b>nhìn toàn cảnh</b>.</li>
+            </ol>
+            <div class="gauge big"><span class="gauge-side">◀</span><div id="calib-knob" class="knob"></div><span class="gauge-side right">▶</span></div>
+            <div class="calib-row">
+              <div class="chips">
+                <div id="calib-boost" class="boost-chip">⚡ TĂNG TỐC</div>
+                <div id="calib-look" class="boost-chip">👀 NHÌN XA</div>
+              </div>
+              <div id="calib-angles" class="angles"></div>
+            </div>
+            <p id="calib-msg" class="calib-msg"></p>
+            <div class="btns">
+              <button id="btn-calibrate" class="btn" type="button">🎯 Hiệu chỉnh</button>
+              <button id="btn-invert" class="btn ghost" type="button">⇄ Đảo chiều</button>
+            </div>
+            <div class="btns">
+              <button id="btn-calib-back" class="btn ghost" type="button">← Menu</button>
+              <button id="btn-play" class="btn primary" type="button" disabled>Vào game ▶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-countdown" class="screen hidden passthrough">
+      <div id="countdown" class="countdown">3</div>
+    </section>
+
+    <section id="screen-pause" class="screen hidden">
+      <div class="card small-card">
+        <h2 id="pause-title">Tạm dừng</h2>
+        <p id="pause-text"></p>
+        <div class="volumes compact">
+          <label class="volume"><span>🎵 Nhạc</span><input type="range" min="0" max="100" step="5" data-volume="musicVolume" /><b data-volume-label="musicVolume"></b></label>
+          <label class="volume"><span>🔔 Hiệu ứng</span><input type="range" min="0" max="100" step="5" data-volume="sfxVolume" /><b data-volume-label="sfxVolume"></b></label>
+          <label class="check"><input type="checkbox" data-muted /> Tắt tiếng</label>
+        </div>
+        <div class="btns">
+          <button id="btn-resume" class="btn primary" type="button">▶ Tiếp tục</button>
+          <button id="btn-settings" class="btn" type="button">⚙️ Cài đặt</button>
+          <button id="btn-recalibrate" class="btn" type="button">🎯 Hiệu chỉnh lại</button>
+          <button id="btn-quit" class="btn ghost" type="button">Thoát</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-over" class="screen hidden">
+      <div class="card small-card over">
+        <h2 id="over-title">Hết giờ!</h2>
+        <div id="over-badge" class="badge hidden">🏆 KỶ LỤC MỚI!</div>
+        <div id="over-score" class="final-score">0</div>
+        <p id="over-rank" class="rank"></p>
+        <div class="stats">
+          <div><b id="over-length">0</b><span>độ dài</span></div>
+          <div><b id="over-fruits">0</b><span>trái cây</span></div>
+          <div><b id="over-animals">0</b><span>thú nhỏ</span></div>
+          <div><b id="over-golden">0</b><span>táo vàng</span></div>
+        </div>
+        <div id="over-catch" class="catch-summary"></div>
+        <div class="btns">
+          <button id="btn-again" class="btn primary" type="button">↻ Chơi lại</button>
+          <button id="btn-menu" class="btn ghost" type="button">Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
