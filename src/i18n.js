@@ -215,6 +215,7 @@ const STRINGS = {
 
     'viewer.title': 'Big Snake 3D – Thư viện model',
     'viewer.subtitle': 'Thư viện model 3D',
+    'viewer.back': '← Về game',
     'viewer.help': 'Kéo chuột để xoay · Cuộn để phóng to · Chuột phải để di chuyển · ↑/↓ chuyển model',
     'viewer.rotate': 'Tự xoay',
     'viewer.anim': 'Hoạt ảnh',
@@ -432,6 +433,7 @@ const STRINGS = {
 
     'viewer.title': 'Big Snake 3D – Model library',
     'viewer.subtitle': '3D model library',
+    'viewer.back': '← Back to the game',
     'viewer.help': 'Drag to rotate · Scroll to zoom · Right-drag to pan · ↑/↓ to switch models',
     'viewer.rotate': 'Auto-rotate',
     'viewer.anim': 'Animation',
