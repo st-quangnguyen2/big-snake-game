@@ -182,7 +182,7 @@ function onFrame(now) {
   return { turn, boost, look };
 }
 
-/** Mirrored webcam image with a sprinkle of face landmarks. */
+/** Mirrored webcam image: the locked player's face with landmarks, anyone else dimmed and outlined. */
 function drawFace(ctx) {
   const { width: w, height: h } = ctx.canvas;
   const video = tracker.video;
@@ -197,10 +197,31 @@ function drawFace(ctx) {
   ctx.scale(-1, 1);
   ctx.drawImage(video, ox, oy, dw, dh);
   ctx.restore();
+  const big = w > 300;
+  for (const box of tracker.boxes) {
+    const x = w - (ox + box.x1 * dw);
+    const y = oy + box.y0 * dh;
+    const bw = (box.x1 - box.x0) * dw;
+    const bh = (box.y1 - box.y0) * dh;
+    ctx.beginPath();
+    ctx.roundRect(x, y, bw, bh, big ? 10 : 6);
+    ctx.lineWidth = big ? 3 : 2;
+    if (box.locked) {
+      ctx.setLineDash([]);
+      ctx.strokeStyle = 'rgba(140, 255, 150, 0.95)';
+    } else {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.fill();
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
   const marks = tracker.landmarks;
   if (!marks) return;
   ctx.fillStyle = 'rgba(140, 255, 150, 0.85)';
-  const r = w > 300 ? 2.2 : 1.4;
+  const r = big ? 2.2 : 1.4;
   for (let i = 0; i < marks.length; i += 3) {
     const p = marks[i];
     ctx.fillRect(w - (ox + p.x * dw) - r / 2, oy + p.y * dh - r / 2, r, r);
@@ -210,7 +231,7 @@ function drawFace(ctx) {
 function updateCalibration() {
   drawFace(calibCtx);
   const face = tracker.facePresent;
-  setText(ui.calibFace, t(face ? 'calib.found' : 'calib.searching'));
+  setText(ui.calibFace, t(face ? 'calib.found' : faceHintKey('calib.searching')));
   ui.calibFace.classList.toggle('ok', face);
   setKnob(ui.calibKnob, head.turn);
   ui.calibBoost.classList.toggle('on', head.boost);
@@ -222,6 +243,13 @@ function updateCalibration() {
 }
 
 /** Warns when the face leaves the frame and pauses after 1.5 s; resumes when it is back. */
+/** Tells the player why they are not tracked (too far, not facing the camera), or `fallback`. */
+function faceHintKey(fallback) {
+  if (tracker.hint === 'far') return 'face.closer';
+  if (tracker.hint === 'turned') return 'face.lookAtCamera';
+  return fallback;
+}
+
 function watchFace(now) {
   if (settings.control !== 'camera' || !tracker.ready) {
     ui.warn.classList.add('hidden');
@@ -233,6 +261,7 @@ function watchFace(now) {
       ui.warn.classList.add('hidden');
     } else {
       faceLostAt ||= now;
+      setText(ui.warn, `⚠️ ${t(faceHintKey('face.missing'))}`);
       ui.warn.classList.remove('hidden');
       if (now - faceLostAt > 1500) pauseGame('face');
     }

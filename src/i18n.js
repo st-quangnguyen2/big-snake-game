@@ -99,7 +99,10 @@ const STRINGS = {
     'tracker.runtime': 'Đang tải bộ xử lý MediaPipe…',
     'tracker.model': 'Đang tải model nhận diện khuôn mặt…',
     'tracker.cancelled': 'Đã huỷ hiệu chỉnh.',
-    'tracker.noFace': 'Không nhận diện được khuôn mặt. Hãy nhìn thẳng vào camera và thử lại.',
+    'tracker.noFace': 'Không nhận diện được khuôn mặt. Hãy ngồi gần camera, nhìn thẳng vào camera và thử lại.',
+    'face.missing': 'Không thấy khuôn mặt',
+    'face.closer': 'Hãy ngồi gần camera hơn',
+    'face.lookAtCamera': 'Hãy nhìn thẳng vào camera',
 
     'error.title': '😕 Chưa dùng được camera',
     'error.keyboard': '⌨️ Chơi bằng bàn phím',
@@ -114,7 +117,7 @@ const STRINGS = {
     'calib.title': '🎯 Hiệu chỉnh camera',
     'calib.searching': 'Đang tìm khuôn mặt…',
     'calib.found': '✓ Đã thấy khuôn mặt',
-    'calib.steps': `<li>Ngồi cách màn hình 50–80 cm, mặt ở giữa khung hình và đủ sáng.</li>
+    'calib.steps': `<li>Ngồi cách màn hình 50–80 cm, mặt ở giữa khung hình và đủ sáng. Game chỉ nhận người ngồi gần và nhìn thẳng vào camera (khung xanh); người khác bị bỏ qua.</li>
 <li>Nhìn thẳng vào màn hình, bấm <b>Hiệu chỉnh</b> và giữ yên 1 giây.</li>
 <li>Thử <b id="calib-steer-hint">xoay đầu sang trái / phải</b>: thanh bên dưới phải chạy cùng chiều.</li>
 <li>Cúi đầu nhẹ → <b>tăng tốc</b>; ngẩng đầu lên → <b>nhìn toàn cảnh</b>.</li>`,
@@ -313,7 +316,10 @@ const STRINGS = {
     'tracker.runtime': 'Loading the MediaPipe runtime…',
     'tracker.model': 'Loading the face detection model…',
     'tracker.cancelled': 'Calibration cancelled.',
-    'tracker.noFace': 'Couldn’t detect your face. Look straight at the camera and try again.',
+    'tracker.noFace': 'Couldn’t detect your face. Sit close to the camera, look straight at it and try again.',
+    'face.missing': 'Can’t see your face',
+    'face.closer': 'Move closer to the camera',
+    'face.lookAtCamera': 'Look straight at the camera',
 
     'error.title': '😕 Camera unavailable',
     'error.keyboard': '⌨️ Play with keyboard',
@@ -328,7 +334,7 @@ const STRINGS = {
     'calib.title': '🎯 Camera calibration',
     'calib.searching': 'Looking for your face…',
     'calib.found': '✓ Face detected',
-    'calib.steps': `<li>Sit 50–80 cm from the screen, face centred in the frame and well lit.</li>
+    'calib.steps': `<li>Sit 50–80 cm from the screen, face centred in the frame and well lit. Only the person close to and facing the camera is tracked (green frame); anyone else is ignored.</li>
 <li>Look straight at the screen, press <b>Calibrate</b> and hold still for 1 second.</li>
 <li>Try <b id="calib-steer-hint">turning your head left / right</b>: the bar below should move the same way.</li>
 <li>Nod slightly → <b>boost</b>; raise your chin → <b>overview</b>.</li>`,

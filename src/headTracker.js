@@ -1,16 +1,21 @@
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Euler, Matrix4, Quaternion, Vector3 } from 'three';
 import { t } from './i18n.js';
+import { FaceLock } from './faceLock.js';
 
 // Head pose from the webcam with MediaPipe Face Landmarker. The facial
 // transformation matrix gives the head rotation directly; we express it
 // relative to a calibrated "looking straight" pose as yaw / pitch / roll.
+// Several faces are detected so that only the player — close to and facing
+// the camera — steers; other people in view are ignored (see faceLock.js).
 
 const WASM_PATH = `${import.meta.env.BASE_URL}mediapipe/wasm`;
 const MODEL_URL = import.meta.env.VITE_FACE_MODEL_URL
   || 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 const RAD2DEG = 180 / Math.PI;
 const MIN_CALIBRATION_SAMPLES = 8;
+/** Faces detected per frame: the player plus a few people around or behind them. */
+const MAX_FACES = 4;
 
 /** One Euro filter: smooth when the head is still, responsive when it moves. */
 class OneEuroFilter {
@@ -71,6 +76,9 @@ export class HeadTracker {
     this.delegate = null;
     this.facePresent = false;
     this.landmarks = null;
+    this.lock = new FaceLock();
+    /** Outline of every detected face (normalized), `locked` for the player's, for the camera preview. */
+    this.boxes = [];
     /** Filtered head angles in degrees relative to the calibrated pose. */
     this.angles = { yaw: 0, pitch: 0, roll: 0 };
     this.neutral = new Quaternion();
@@ -125,7 +133,7 @@ export class HeadTracker {
     return FaceLandmarker.createFromOptions(fileset, {
       baseOptions: { modelAssetPath: MODEL_URL, delegate },
       runningMode: 'VIDEO',
-      numFaces: 1,
+      numFaces: MAX_FACES,
       minFaceDetectionConfidence: 0.5,
       minFacePresenceConfidence: 0.5,
       minTrackingConfidence: 0.5,
@@ -141,7 +149,14 @@ export class HeadTracker {
     this.video.srcObject = null;
     this.facePresent = false;
     this.landmarks = null;
+    this.boxes = [];
+    this.lock.reset();
     this.lastVideoTime = -1;
+  }
+
+  /** Why nobody is tracked although faces are visible: 'far' | 'turned' | null. */
+  get hint() {
+    return this.facePresent ? null : this.lock.hint;
   }
 
   /** Call once per animation frame; runs detection only on new video frames. */
@@ -162,16 +177,18 @@ export class HeadTracker {
       return;
     }
 
-    const matrices = result.facialTransformationMatrixes;
-    if (!matrices?.length) {
+    const faces = (result.facialTransformationMatrixes ?? []).map((matrix, i) => this.describe(matrix, result.faceLandmarks?.[i]));
+    const index = this.lock.pick(faces, now);
+    this.boxes = faces.map((face, i) => ({ ...face.box, locked: i === index }));
+    if (index < 0) {
       this.landmarks = null;
       // Ignore single dropped frames before declaring the face lost.
       if (now - this.lastSeen > 250) this.facePresent = false;
       return;
     }
 
-    this._m.fromArray(matrices[0].data);
-    this._m.decompose(this._p, this._q, this._s);
+    const face = faces[index];
+    this._q.copy(face.rotation);
     this.calibration?.samples.push(this._q.clone());
     this._rel.copy(this.neutral).invert().multiply(this._q);
     this._e.setFromQuaternion(this._rel, 'YXZ');
@@ -179,9 +196,37 @@ export class HeadTracker {
     this.angles.yaw = this.filters.yaw.filter(this._e.y * RAD2DEG, t);
     this.angles.pitch = this.filters.pitch.filter(this._e.x * RAD2DEG, t);
     this.angles.roll = this.filters.roll.filter(this._e.z * RAD2DEG, t);
-    this.landmarks = result.faceLandmarks?.[0] ?? null;
+    this.landmarks = face.landmarks;
     this.facePresent = true;
     this.lastSeen = now;
+  }
+
+  /** Size, position and camera-relative angles of one detected face. */
+  describe(matrix, landmarks = []) {
+    this._m.fromArray(matrix.data);
+    this._m.decompose(this._p, this._q, this._s);
+    // A face looking straight at the camera has (close to) no rotation.
+    this._e.setFromQuaternion(this._q, 'YXZ');
+    let x0 = 1;
+    let y0 = 1;
+    let x1 = 0;
+    let y1 = 0;
+    for (const p of landmarks) {
+      x0 = Math.min(x0, p.x);
+      x1 = Math.max(x1, p.x);
+      y0 = Math.min(y0, p.y);
+      y1 = Math.max(y1, p.y);
+    }
+    return {
+      rotation: this._q.clone(),
+      yaw: this._e.y * RAD2DEG,
+      pitch: this._e.x * RAD2DEG,
+      cx: (x0 + x1) / 2,
+      cy: (y0 + y1) / 2,
+      width: Math.max(0, x1 - x0),
+      box: { x0, y0, x1, y1 },
+      landmarks,
+    };
   }
 
   /** Records the current head pose as "straight ahead". */
