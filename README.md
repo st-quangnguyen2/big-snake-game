@@ -104,6 +104,7 @@ src/storage.js              Settings and high scores (localStorage)
 src/i18n.js                 Vietnamese / English UI text, t() / tr() helpers and the language switch
 src/film.js                 Film mode (?film): shortcuts and camera moves for recording videos
 src/audio.js, src/music.js  Sound effects, volume buses, background music (a small step sequencer)
+promo/                      Promo video renderer (headless Chrome + AVFoundation), see promo/README.md
 src/themes.js               Arena theme palettes and night lighting
 src/preview.js              Live snake preview in the menu
 src/particles.js            Particle effects
@@ -148,6 +149,12 @@ the high-score table. Record the screen with OBS or the system recorder; music a
 game itself, so they can be used in the video.
 
 ---
+### Promo video
+
+`npm run promo` renders the 57-second promo video (`--short` for the 15-second 9:16 cut, `--lang=en` for English)
+straight from the game, frame by frame, with the game's own music and sounds. It needs macOS and Google Chrome; see
+[promo/README.md](promo/README.md).
+
 
 ## 3. Build and deploy
 
